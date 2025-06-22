@@ -156,3 +156,4 @@ Backend va frontend ishga tushishidan oldin `.env` fayllarini yaratishni unutman
 - `PUT /api/contact/:id/read` - Xabarni o'qilgan deb belgilash (admin)
 # everest-restaurant
 # everest-restaurant
+# Everest-Restaurant
