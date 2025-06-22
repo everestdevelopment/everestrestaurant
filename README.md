@@ -154,3 +154,4 @@ Backend va frontend ishga tushishidan oldin `.env` fayllarini yaratishni unutman
 - `POST /api/contact` - Xabar yuborish
 - `GET /api/contact` - Barcha xabarlar (admin)
 - `PUT /api/contact/:id/read` - Xabarni o'qilgan deb belgilash (admin)
+# everest-restaurant
