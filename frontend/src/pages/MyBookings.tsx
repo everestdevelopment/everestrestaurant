@@ -7,12 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency, getStatusText } from '@/lib/utils';
+import { Order } from '@/types';
 
 // Interfaces
 interface Order {
   _id: string;
   orderItems: { name: string; quantity: number; price: number }[];
-  total: number;
+  totalPrice: number;
+  total?: number; // Keep optional for backward compatibility
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
   createdAt: string;
 }
@@ -27,6 +31,7 @@ interface Reservation {
 }
 
 const MyBookings = () => {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,89 +54,126 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 10000); // Poll every 10 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const handleCancelOrder = async (id: string) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    if (!window.confirm(t('mybookings_cancel_order_confirm'))) return;
     try {
       await apiFetch(`/orders/${id}/cancel`, { method: 'PUT' });
-      toast({ title: "Success", description: "Order has been cancelled." });
+      toast({ title: t('toast_success'), description: t('mybookings_cancel_order_success') });
       fetchData(); // Refresh data
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to cancel order.", variant: "destructive" });
+      toast({ title: t('toast_error'), description: error.message || t('mybookings_cancel_order_fail'), variant: "destructive" });
     }
   };
 
   const handleCancelReservation = async (id: string) => {
-    if (!window.confirm("Are you sure you want to cancel this reservation?")) return;
+    if (!window.confirm(t('mybookings_cancel_reservation_confirm'))) return;
     try {
       await apiFetch(`/reservations/${id}/cancel`, { method: 'PUT' });
-      toast({ title: "Success", description: "Reservation has been cancelled." });
+      toast({ title: t('toast_success'), description: t('mybookings_cancel_reservation_success') });
       fetchData(); // Refresh data
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to cancel reservation.", variant: "destructive" });
+      toast({ title: t('toast_error'), description: error.message || t('mybookings_cancel_reservation_fail'), variant: "destructive" });
     }
   };
   
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
-      <div className="pt-32 pb-12 md:pt-40 md:pb-20 bg-slate-900 text-center">
-        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-4">My Bookings</h1>
-        <p className="text-xl text-gray-400">View and manage your orders and reservations.</p>
+      <div className="pt-24 md:pt-32 pb-8 md:pb-12 bg-white dark:bg-slate-900 text-center">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-slate-800 dark:gradient-text mb-2 md:mb-4">{t('mybookings_title')}</h1>
+        <p className="text-sm md:text-xl text-slate-600 dark:text-gray-400 px-2">{t('mybookings_subtitle')}</p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 pb-16 md:pb-24">
         <Tabs defaultValue="orders">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="orders">My Orders</TabsTrigger>
-            <TabsTrigger value="reservations">My Reservations</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 h-10 md:h-12">
+            <TabsTrigger value="orders" className="text-xs md:text-sm">{t('mybookings_orders_tab')}</TabsTrigger>
+            <TabsTrigger value="reservations" className="text-xs md:text-sm">{t('mybookings_reservations_tab')}</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="orders" className="mt-6">
-            <Card className="glass-card">
-              <CardHeader><CardTitle>Your Orders</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                {loading ? <p>Loading orders...</p> : orders.length > 0 ? orders.map(order => (
-                  <div key={order._id} className="p-4 bg-slate-800/50 rounded-lg flex justify-between items-center">
-                    <div>
-                      <p><strong>Order ID:</strong> #{order._id.substring(0, 7)}</p>
-                      <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
-                      <p><strong>Total:</strong> ${order.total.toFixed(2)}</p>
-                      <Badge>{order.status}</Badge>
+          <TabsContent value="orders" className="mt-4 md:mt-6">
+            <Card className="glass-card shadow-sm">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-lg md:text-xl">{t('mybookings_your_orders_title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 md:space-y-4">
+                {loading ? <p className="text-sm md:text-base">{t('loading_orders')}</p> : orders.length > 0 ? orders.map(order => (
+                  <div key={order._id} className="p-3 md:p-4 bg-slate-800/50 rounded-lg">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm md:text-base mb-2"><strong>{t('mybookings_order_id')}:</strong> #{order._id.substring(0, 7)}</p>
+                        <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
+                          {order.orderItems.map((item, index) => (
+                            <div key={index} className="flex justify-between">
+                              <span className="truncate flex-1 mr-2">{item.name} x {item.quantity}</span>
+                              <span className="flex-shrink-0">{formatCurrency(item.price * item.quantity)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <hr className="my-2" />
+                        <div className="space-y-1 text-xs md:text-sm">
+                          <p><strong>{t('mybookings_total')}:</strong> {formatCurrency(order.totalPrice || order.total || 0)}</p>
+                          <p><strong>{t('mybookings_status')}:</strong> {getStatusText(order.status)}</p>
+                          <p><strong>{t('mybookings_date')}:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <Badge className="mt-2 text-xs">{getStatusText(order.status)}</Badge>
+                      </div>
+                      {order.status === 'Pending' && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          className="h-8 md:h-10 text-xs md:text-sm w-full md:w-auto"
+                          onClick={() => handleCancelOrder(order._id)}
+                        >
+                          {t('mybookings_cancel_order_btn')}
+                        </Button>
+                      )}
                     </div>
-                    {order.status === 'Pending' && (
-                      <Button variant="destructive" onClick={() => handleCancelOrder(order._id)}>Cancel Order</Button>
-                    )}
                   </div>
-                )) : <p>You have no orders.</p>}
+                )) : <p className="text-sm md:text-base">{t('mybookings_no_orders')}</p>}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="reservations" className="mt-6">
-            <Card className="glass-card">
-              <CardHeader><CardTitle>Your Reservations</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                {loading ? <p>Loading reservations...</p> : reservations.length > 0 ? reservations.map(res => (
-                  <div key={res._id} className="p-4 bg-slate-800/50 rounded-lg flex justify-between items-center">
-                    <div>
-                      <p><strong>Date:</strong> {new Date(res.date).toLocaleDateString()}</p>
-                      <p><strong>Time:</strong> {res.time}</p>
-                      <p><strong>Guests:</strong> {res.guests}</p>
-                      <Badge>{res.status}</Badge>
+          <TabsContent value="reservations" className="mt-4 md:mt-6">
+            <Card className="glass-card shadow-sm">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-lg md:text-xl">{t('mybookings_your_reservations_title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 md:space-y-4">
+                {loading ? <p className="text-sm md:text-base">{t('loading_reservations')}</p> : reservations.length > 0 ? reservations.map(res => (
+                  <div key={res._id} className="p-3 md:p-4 bg-slate-800/50 rounded-lg">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
+                      <div className="flex-1">
+                        <div className="space-y-1 text-xs md:text-sm">
+                          <p><strong>{t('mybookings_date')}:</strong> {new Date(res.date).toLocaleDateString()}</p>
+                          <p><strong>{t('mybookings_time')}:</strong> {res.time}</p>
+                          <p><strong>{t('mybookings_guests')}:</strong> {res.guests}</p>
+                        </div>
+                        <Badge className="mt-2 text-xs">{getStatusText(res.status)}</Badge>
+                      </div>
+                      {res.status !== 'Cancelled' && (
+                         <Button 
+                           variant="destructive" 
+                           size="sm"
+                           className="h-8 md:h-10 text-xs md:text-sm w-full md:w-auto"
+                           onClick={() => handleCancelReservation(res._id)}
+                         >
+                           {t('mybookings_cancel_reservation_btn')}
+                         </Button>
+                      )}
                     </div>
-                    {res.status !== 'Cancelled' && (
-                       <Button variant="destructive" onClick={() => handleCancelReservation(res._id)}>Cancel Reservation</Button>
-                    )}
                   </div>
-                )) : <p>You have no reservations.</p>}
+                )) : <p className="text-sm md:text-base">{t('mybookings_no_reservations')}</p>}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-      <Footer />
     </div>
   );
 };

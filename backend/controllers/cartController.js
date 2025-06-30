@@ -29,7 +29,7 @@ export const addToCart = asyncHandler(async (req, res) => {
 
 // DELETE /api/cart/:itemId
 export const removeFromCart = asyncHandler(async (req, res) => {
-  let cart = await Cart.findOne({ user: req.user._id });
+  const cart = await Cart.findOne({ user: req.user._id });
   if (!cart) return res.status(404).json({ message: 'Cart not found' });
   cart.items = cart.items.filter(i => i._id.toString() !== req.params.itemId);
   await cart.save();

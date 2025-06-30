@@ -1,0 +1,493 @@
+import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
+import { Eye, Trash, Loader2, Package, Clock, CheckCircle, XCircle, Truck, Filter, History } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
+import StatusManager from '@/components/ui/StatusManager';
+import { getAdminStatusText } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+
+interface OrderItem {
+  _id: string;
+  name: string;
+  nameKey: string;
+  quantity: number;
+  price: number;
+  product: {
+    _id: string;
+    name: string;
+    image: string;
+  };
+}
+
+interface ShippingAddress {
+  fullName: string;
+  email: string;
+  district: string;
+  region: string;
+  postalCode: string;
+  country: string;
+}
+
+interface StatusHistory {
+  status: string;
+  changedAt: string;
+  changedBy: string;
+  note: string;
+}
+
+interface Order {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  orderItems: OrderItem[];
+  shippingAddress: ShippingAddress;
+  paymentMethod: string;
+  itemsPrice: number;
+  taxPrice: number;
+  shippingPrice: number;
+  totalPrice: number;
+  isPaid: boolean;
+  paidAt: string;
+  status: string;
+  statusHistory: StatusHistory[];
+  cancellationReason?: string;
+  createdAt: string;
+}
+
+const AdminOrders: React.FC = () => {
+  const { t } = useTranslation();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const statusOptions = [
+    { value: 'Pending', label: getAdminStatusText('Pending'), color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400', icon: <Clock className="w-4 h-4" /> },
+    { value: 'Confirmed', label: getAdminStatusText('Confirmed'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400', icon: <CheckCircle className="w-4 h-4" /> },
+    { value: 'Preparing', label: getAdminStatusText('Preparing'), color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400', icon: <Package className="w-4 h-4" /> },
+    { value: 'Ready', label: getAdminStatusText('Ready'), color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400', icon: <CheckCircle className="w-4 h-4" /> },
+    { value: 'OutForDelivery', label: getAdminStatusText('OutForDelivery'), color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400', icon: <Truck className="w-4 h-4" /> },
+    { value: 'Delivered', label: getAdminStatusText('Delivered'), color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400', icon: <CheckCircle className="w-4 h-4" /> },
+    { value: 'Cancelled', label: getAdminStatusText('Cancelled'), color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400', icon: <XCircle className="w-4 h-4" /> }
+  ];
+
+  const [filters, setFilters] = useState({ 
+    status: 'all', 
+    paymentStatus: 'all',
+    dateRange: 'all'
+  });
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('uz-UZ', { style: 'currency', currency: 'UZS' });
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusOption = statusOptions.find(option => option.value === status);
+    return (
+      <Badge className={statusOption?.color || 'bg-gray-100 text-gray-800'}>
+        {statusOption?.icon} {statusOption?.label || status}
+      </Badge>
+    );
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Pending':
+        return <Clock className="w-4 h-4" />;
+      case 'Confirmed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'Preparing':
+        return <Package className="w-4 h-4" />;
+      case 'Ready':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'OutForDelivery':
+        return <Truck className="w-4 h-4" />;
+      case 'Delivered':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'Cancelled':
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('🔍 Fetching orders...');
+      const data = await apiFetch('/orders/admin');
+      console.log('🔍 Orders response:', data);
+      
+      // Handle paginated response structure
+      const ordersData = data.data?.docs || data.data || [];
+      console.log('🔍 Orders data:', ordersData);
+      setOrders(ordersData);
+    } catch (err: any) {
+      console.error('❌ Error fetching orders:', err);
+      setError(err.message || 'Xatolik yuz berdi');
+      toast({ title: 'Xato', description: err.message || 'Xatolik yuz berdi', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    // eslint-disable-next-line
+  }, []);
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string, note?: string) => {
+    setUpdatingStatus(orderId);
+    try {
+      await apiFetch(`/orders/admin/${orderId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus, note })
+      });
+      toast({ title: 'Muvaffaqiyatli', description: 'Status yangilandi' });
+      fetchOrders(); // Refresh the list
+    } catch (err: any) {
+      toast({ title: 'Xato', description: err.message || 'Status yangilashda xatolik yuz berdi', variant: 'destructive' });
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      await apiFetch(`/orders/admin/${orderId}`, {
+        method: 'DELETE'
+      });
+      toast({ title: 'Muvaffaqiyatli', description: 'Buyurtma o\'chirildi' });
+      fetchOrders(); // Refresh the list
+    } catch (err: any) {
+      toast({ title: 'Xato', description: err.message || 'Buyurtma o\'chirishda xatolik yuz berdi', variant: 'destructive' });
+    }
+  };
+
+  const openOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDetailsModalOpen(true);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('uz-UZ', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const filteredOrders = orders.filter(order => {
+    if (filters.status !== 'all' && order.status !== filters.status) return false;
+    if (filters.paymentStatus !== 'all') {
+      if (filters.paymentStatus === 'paid' && !order.isPaid) return false;
+      if (filters.paymentStatus === 'unpaid' && order.isPaid) return false;
+    }
+    if (filters.dateRange !== 'all') {
+      const orderDate = new Date(order.createdAt);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      switch (filters.dateRange) {
+        case 'today':
+          return orderDate.toDateString() === today.toDateString();
+        case 'yesterday':
+          return orderDate.toDateString() === yesterday.toDateString();
+        case 'week':
+          return orderDate >= weekAgo;
+        default:
+          return true;
+      }
+    }
+    return true;
+  });
+
+  return (
+    <div className="admin-section p-4 md:p-6">
+      <div className="admin-header">
+        <h1 className="admin-title">{t('admin.orders.title', 'Buyurtmalar')}</h1>
+        <Button variant="outline" size="sm" onClick={fetchOrders} className="admin-button">
+          <Loader2 className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Yangilash')}
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Filter className="w-5 h-5" />
+          <h3 className="font-semibold">{t('admin.orders.filters', 'Filtrlash')}</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">{t('admin.orders.status', 'Status')}</label>
+            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('admin.orders.allStatuses', 'Barcha statuslar')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('admin.orders.allStatuses', 'Barcha statuslar')}</SelectItem>
+                {statusOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">{t('admin.orders.paymentStatus', 'To\'lov holati')}</label>
+            <Select value={filters.paymentStatus} onValueChange={(value) => setFilters(prev => ({ ...prev, paymentStatus: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('admin.orders.allPayments', 'Barcha to\'lovlar')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('admin.orders.allPayments', 'Barcha to\'lovlar')}</SelectItem>
+                <SelectItem value="paid">{t('admin.orders.paid', 'To\'langan')}</SelectItem>
+                <SelectItem value="unpaid">{t('admin.orders.unpaid', 'To\'lanmagan')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">{t('admin.orders.date', 'Sana')}</label>
+            <Select value={filters.dateRange} onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('admin.orders.allDays', 'Barcha kunlar')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('admin.orders.allDays', 'Barcha kunlar')}</SelectItem>
+                <SelectItem value="today">{t('admin.orders.today', 'Bugun')}</SelectItem>
+                <SelectItem value="yesterday">{t('admin.orders.yesterday', 'Kecha')}</SelectItem>
+                <SelectItem value="week">{t('admin.orders.lastWeek', 'Oxirgi 7 kun')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Orders List */}
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-8 text-red-500">{error}</div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">{t('admin.orders.noOrders', 'Buyurtmalar topilmadi')}</div>
+      ) : (
+        <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.order', 'Buyurtma')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.customer', 'Mijoz')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.products', 'Mahsulotlar')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.price', 'Narx')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.status', 'Status')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.date', 'Sana')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.actions', 'Amallar')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                {filteredOrders.map((order) => (
+                  <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        #{order._id.slice(-6)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">{order.shippingAddress.fullName}</div>
+                      <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {order.orderItems.length} {t('admin.orders.productsCount', 'ta mahsulot')}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(order.totalPrice)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {order.isPaid ? t('admin.orders.paid', 'To\'langan') : t('admin.orders.unpaid', 'To\'lanmagan')}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {getStatusBadge(order.status)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openOrderDetails(order)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        
+                        {order.status !== 'Cancelled' && (
+                          <StatusManager
+                            currentStatus={order.status}
+                            statusOptions={statusOptions}
+                            onStatusChange={(newStatus, note) => handleStatusUpdate(order._id, newStatus, note)}
+                            isLoading={updatingStatus === order._id}
+                          />
+                        )}
+                        
+                        {order.status === 'Cancelled' && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('admin.orders.deleteOrder', 'Buyurtmani o\'chirish')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('admin.orders.deleteConfirm', 'Bu buyurtmani o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.')}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('admin.orders.cancel', 'Bekor qilish')}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteOrder(order._id)}>
+                                  {t('admin.orders.delete', 'O\'chirish')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details Modal */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('admin.orders.orderDetails', 'Buyurtma tafsilotlari')}</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold mb-2">{t('admin.orders.orderInfo', 'Buyurtma ma\'lumotlari')}</h3>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>ID:</strong> #{selectedOrder._id.slice(-6)}</p>
+                    <p><strong>{t('admin.orders.status', 'Status')}:</strong> {getStatusBadge(selectedOrder.status)}</p>
+                    <p><strong>{t('admin.orders.date', 'Sana')}:</strong> {formatDate(selectedOrder.createdAt)}</p>
+                    <p><strong>{t('admin.orders.payment', 'To\'lov')}:</strong> {selectedOrder.isPaid ? t('admin.orders.paid', 'To\'langan') : t('admin.orders.unpaid', 'To\'lanmagan')}</p>
+                    {selectedOrder.cancellationReason && (
+                      <p><strong>{t('admin.orders.cancellationReason', 'Bekor qilish sababi')}:</strong> {selectedOrder.cancellationReason}</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">{t('admin.orders.customerInfo', 'Mijoz ma\'lumotlari')}</h3>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>{t('admin.orders.name', 'Ism')}:</strong> {selectedOrder.shippingAddress.fullName}</p>
+                    <p><strong>Email:</strong> {selectedOrder.shippingAddress.email}</p>
+                    <p><strong>{t('admin.orders.address', 'Manzil')}:</strong> {selectedOrder.shippingAddress.district}, {selectedOrder.shippingAddress.region}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <h3 className="font-semibold mb-2">{t('admin.orders.products', 'Mahsulotlar')}</h3>
+                <div className="space-y-2">
+                  {selectedOrder.orderItems.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-slate-700 rounded">
+                      <div>
+                        <p className="font-medium">{item.name || item.nameKey}</p>
+                        <p className="text-sm text-gray-500">{t('admin.orders.quantity', 'Miqdori')}: {item.quantity}</p>
+                      </div>
+                      <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              <div>
+                <h3 className="font-semibold mb-2">{t('admin.orders.priceSummary', 'Narx hisobi')}</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>{t('admin.orders.products', 'Mahsulotlar')}:</span>
+                    <span>{formatCurrency(selectedOrder.itemsPrice)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{t('admin.orders.shipping', 'Yetkazib berish')}:</span>
+                    <span>{formatCurrency(selectedOrder.shippingPrice)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{t('admin.orders.tax', 'Soliq')}:</span>
+                    <span>{formatCurrency(selectedOrder.taxPrice)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t pt-1">
+                    <span>{t('admin.orders.total', 'Jami')}:</span>
+                    <span>{formatCurrency(selectedOrder.totalPrice)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status History */}
+              {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <History className="w-4 h-4 mr-2" />
+                    {t('admin.orders.statusHistory', 'Status tarixi')}
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedOrder.statusHistory.slice().reverse().map((history, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-slate-700 rounded">
+                        {getStatusIcon(history.status)}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{getAdminStatusText(history.status)}</p>
+                          <p className="text-xs text-gray-500">{history.note}</p>
+                          <p className="text-xs text-gray-400">
+                            {formatDate(history.changedAt)} - {history.changedBy}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default AdminOrders; 

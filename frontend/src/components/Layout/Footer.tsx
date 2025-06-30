@@ -1,10 +1,26 @@
-
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
+const socialLinks = [
+  { name: 'Facebook', url: 'https://facebook.com/everestrestaurant' },
+  { name: 'Instagram', url: 'https://instagram.com/everestrestaurant' },
+  { name: 'Twitter', url: 'https://twitter.com/everestrest' },
+  { name: 'TikTok', url: 'https://tiktok.com/@everestrestaurant' },
+];
 
 const Footer = () => {
+  const { t } = useTranslation();
+  
+  const quickLinks = [
+    { name: t('footer_link_menu'), to: '/menu' },
+    { name: t('footer_link_reservations'), to: '/reservations' },
+    { name: t('nav_contact'), to: '/contact' },
+  ];
+
   return (
-    <footer className="bg-slate-900 border-t border-white/10">
+    <footer className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
@@ -14,22 +30,24 @@ const Footer = () => {
                 <span className="text-slate-900 font-display font-bold text-xl">E</span>
               </div>
               <div>
-                <span className="font-display text-2xl font-bold gradient-text">Everest Rest</span>
-                <p className="text-xs text-gray-400 -mt-1">Premium Dining Experience</p>
+                <span className="font-display text-2xl font-bold gradient-text">{t('footer_brand_name')}</span>
+                <p className="text-xs text-slate-500 dark:text-gray-400 -mt-1">{t('footer_brand_tagline')}</p>
               </div>
             </div>
-            <p className="text-gray-400 mb-6 max-w-md leading-relaxed">
-              Where culinary artistry meets the pinnacle of fine dining. Experience flavors that reach new heights 
-              in our award-winning restaurant.
+            <p className="text-slate-600 dark:text-gray-400 mb-6 max-w-md leading-relaxed">
+              {t('footer_description')}
             </p>
             <div className="flex space-x-4">
-              {['Facebook', 'Instagram', 'Twitter', 'TikTok'].map((social) => (
-                <a 
-                  key={social}
-                  href="#" 
-                  className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-yellow-400 hover:text-slate-900 transition-all duration-200"
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg flex items-center justify-center text-slate-600 dark:text-white hover:bg-yellow-400 hover:text-slate-900 transition-all duration-200"
+                  aria-label={social.name}
                 >
-                  <span className="text-sm font-semibold">{social[0]}</span>
+                  <span className="text-sm font-semibold">{social.name[0]}</span>
                 </a>
               ))}
             </div>
@@ -37,27 +55,27 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-display text-xl font-semibold gradient-text mb-6">Contact</h3>
+            <h3 className="font-display text-xl font-semibold gradient-text mb-6">{t('footer_contact_title')}</h3>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-yellow-400 mt-1" />
                 <div>
-                  <p className="text-white font-medium">Address</p>
-                  <p className="text-gray-400 text-sm">123 Summit Avenue<br />Manhattan, NY 10001</p>
+                  <p className="text-slate-800 dark:text-white font-medium">{t('footer_address_title')}</p>
+                  <p className="text-slate-500 dark:text-gray-400 text-sm" dangerouslySetInnerHTML={{ __html: t('footer_address_value') }}></p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Phone className="w-5 h-5 text-yellow-400 mt-1" />
                 <div>
-                  <p className="text-white font-medium">Phone</p>
-                  <p className="text-gray-400 text-sm">+1 (555) 123-4567</p>
+                  <p className="text-slate-800 dark:text-white font-medium">{t('footer_phone_title')}</p>
+                  <p className="text-slate-500 dark:text-gray-400 text-sm">+998(50)515-17-00</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-yellow-400 mt-1" />
                 <div>
-                  <p className="text-white font-medium">Email</p>
-                  <p className="text-gray-400 text-sm">hello@everestrest.com</p>
+                  <p className="text-slate-800 dark:text-white font-medium">{t('footer_email_title')}</p>
+                  <p className="text-slate-500 dark:text-gray-400 text-sm">mustafoyev@gmail.com</p>
                 </div>
               </div>
             </div>
@@ -65,45 +83,43 @@ const Footer = () => {
 
           {/* Hours & Links */}
           <div>
-            <h3 className="font-display text-xl font-semibold gradient-text mb-6">Hours</h3>
+            <h3 className="font-display text-xl font-semibold gradient-text mb-6">{t('footer_hours_title')}</h3>
             <div className="space-y-3 mb-8">
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-yellow-400" />
-                <span className="text-white text-sm">Monday - Thursday</span>
+                <span className="text-slate-800 dark:text-white text-sm">{t('footer_hours_mon_thu')}</span>
               </div>
-              <p className="text-gray-400 text-sm ml-6">5:00 PM - 10:00 PM</p>
-              
+              <p className="text-slate-500 dark:text-gray-400 text-sm ml-6">5:00 PM - 22:00 PM</p>
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-yellow-400" />
-                <span className="text-white text-sm">Friday - Sunday</span>
+                <span className="text-slate-800 dark:text-white text-sm">{t('footer_hours_fri_sun')}</span>
               </div>
-              <p className="text-gray-400 text-sm ml-6">5:00 PM - 11:00 PM</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm ml-6">5:00 PM - 23:59 PM</p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-white font-medium mb-3">Quick Links</h4>
-              {['Menu', 'Reservations', 'Private Events', 'Gift Cards', 'Careers'].map((link) => (
-                <a 
-                  key={link}
-                  href="#" 
-                  className="block text-gray-400 hover:text-yellow-400 transition-colors duration-200 text-sm"
+              <h4 className="text-slate-800 dark:text-white font-medium mb-3">{t('footer_quick_links_title')}</h4>
+              {quickLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.to}
+                  className="block text-slate-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200 text-sm"
                 >
-                  {link}
-                </a>
+                  {link.name}
+                </Link>
               ))}
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm mb-4 md:mb-0">
-            © 2024 Everest Rest. All rights reserved. | <a href="privacy-policy">Privacy Policy</a> | Terms of Service
+        <div className="border-t border-slate-200 dark:border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-slate-500 dark:text-gray-400 text-sm mb-4 md:mb-0">
+            {t('footer_copyright')} | <Link to="/privacy-policy" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('footer_privacy_policy')}</Link> | <Link to="/contact" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('nav_contact')}</Link> | <Link to="/terms-of-service" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('footer_terms')}</Link>
           </p>
-          <div className="flex items-center space-x-2 text-gray-400 text-sm">
-            <span>Made with</span>
-            <Heart className="w-4 h-4 text-red-400 fill-current" />
-            <span>in New York</span>
+          <div className="flex items-center space-x-2 text-slate-500 dark:text-gray-400 text-sm">
+            <span>{t('footer_by')}</span>
+            <span>{t('footer_made_with')}</span>
           </div>
         </div>
       </div>

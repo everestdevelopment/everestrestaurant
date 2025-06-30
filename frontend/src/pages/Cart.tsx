@@ -1,247 +1,173 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, CreditCard, Star } from 'lucide-react';
-import Navbar from '@/components/Layout/Navbar';
-import Footer from '@/components/Layout/Footer';
+import { Trash2, Plus, Minus, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { useShoppingContext } from '@/context/ShoppingContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/use-toast';
+import { useShopping } from '@/context/ShoppingContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+import { MenuItem } from '@/context/ShoppingContext';
+import { menuItems } from '@/data/menuData';
+import MenuItemCard from '@/components/Menu/MenuItemCard';
 
 const Cart = () => {
-  const { 
-    cartItems, 
-    removeFromCart, 
+  const { t } = useTranslation();
+  const {
+    cartItems,
+    removeFromCart,
     updateCartItemQuantity,
+    cartTotal: subtotal,
     clearCart,
-    cartTotal,
-    loading
-  } = useShoppingContext();
+  } = useShopping();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Debug logging
-  console.log('Cart component - user:', user);
-  console.log('Cart component - cartItems:', cartItems);
-  console.log('Cart component - loading:', loading);
-  console.log('Cart component - cartTotal:', cartTotal);
-
-  // Calculate totals
-  const subtotal = cartTotal;
-  const tax = subtotal * 0.08; // 8% tax rate
+  const taxRate = 0.1; // 10% tax
+  const tax = subtotal * taxRate;
   const total = subtotal + tax;
 
-  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">Loading...</div>;
-  if (!user) return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
-      <Navbar />
-      <div className="text-center mt-32">
-        <h2 className="text-2xl font-bold mb-4">Please login to view your cart</h2>
-        <Button onClick={() => navigate('/login')}>Go to Login</Button>
+  const handleUpdateQuantity = (productId: string, quantity: number) => {
+    if (quantity > 0) {
+      updateCartItemQuantity(productId, quantity);
+    } else {
+      removeFromCart(productId);
+    }
+  };
+
+  const handleCheckout = () => {
+    if (user) {
+      navigate('/checkout');
+    } else {
+      toast({
+        title: t('toast_login_required_title'),
+        description: t('toast_login_required_desc'),
+        variant: 'destructive',
+        action: (
+          <Button onClick={() => navigate('/login')} variant="outline">{t('login')}</Button>
+        ),
+      });
+    }
+  };
+
+  const handleRemoveAllCart = async () => {
+    await clearCart();
+  };
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8 text-center min-h-[calc(100vh-8rem)] flex flex-col justify-center items-center">
+        <div className="bg-white dark:glass-card p-6 md:p-10 text-center animate-fade-in max-w-2xl mx-auto rounded-lg shadow-lg">
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center">
+              <CreditCard className="h-8 w-8 md:h-10 md:w-10 text-slate-400 dark:text-gray-400" />
+            </div>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2">{t('cart_empty_title')}</h1>
+            <p className="text-sm md:text-base text-slate-500 dark:text-gray-400 mb-6 md:mb-8">{t('cart_empty_desc')}</p>
+            <Button asChild className="h-10 md:h-11">
+              <Link to="/menu">{t('cart_go_to_menu')}</Link>
+            </Button>
+        </div>
       </div>
-      <Footer />
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Navbar />
+    <div className="container mx-auto px-3 sm:px-4 md:px-6 py-8 md:py-12 pt-16 md:pt-20 sm:pt-24 md:pt-28">
+      <div className="text-center mb-8 md:mb-12">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-slate-800 dark:text-white mb-2 md:mb-4">
+          {t('cart_title')}
+        </h1>
+        <p className="text-sm md:text-xl lg:text-2xl text-slate-500 dark:text-gray-400 max-w-3xl mx-auto px-2">
+          {t('cart_description')}
+        </p>
+      </div>
+      {cartItems.length > 0 && (
+        <div className="flex justify-end mb-4">
+          <Button variant="destructive" size="sm" className="h-8 md:h-10 text-xs md:text-sm" onClick={handleRemoveAllCart}>
+            {t('cart_remove_all', 'Remove All')}
+          </Button>
+        </div>
+      )}
       
-      {/* Page Header */}
-      <div className="pt-32 pb-12 md:pt-40 md:pb-20 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-4 animate-neon-glow">
-              Your Cart
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
-              Review and complete your order
-            </p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-12">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+          {cartItems.map((item, index) => (
+            <MenuItemCard
+              key={item.cartItemId || item._id}
+              product={{
+                ...item,
+                image: item.image || '/placeholder.svg',
+                rating: typeof item.rating === 'number' ? item.rating : (item.rating?.rate || 0),
+              }}
+              isLiked={false}
+              onToggleLike={() => {}}
+              onAddToCart={() => {}}
+              extraBottomContent={
+                <div className="flex justify-between items-center mt-3 md:mt-4">
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-7 w-7 md:h-8 md:w-8 rounded-full"
+                      onClick={() => handleUpdateQuantity(item._id, (item.quantity || 1) - 1)}
+                    >
+                      <Minus className="h-3 w-3 md:h-4 md:w-4" />
+                    </Button>
+                    <span className="font-bold text-base md:text-lg w-6 md:w-8 text-center">{item.quantity || 1}</span>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-7 w-7 md:h-8 md:w-8 rounded-full"
+                      onClick={() => handleUpdateQuantity(item._id, (item.quantity || 1) + 1)}
+                    >
+                      <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full h-8 w-8 md:h-10 md:w-10 bg-white/20 backdrop-blur-sm hover:bg-white/40 text-white hover:text-red-500"
+                    onClick={() => removeFromCart(item.cartItemId || item._id)}
+                  >
+                    <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                  </Button>
+                </div>
+              }
+            />
+          ))}
+        </div>
+        
+        <div className="lg:sticky lg:top-24 z-30">
+          <Card className="bg-white dark:glass-card shadow-lg">
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-lg md:text-2xl font-display text-slate-800 dark:text-white">{t('order_summary')}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
+              <div className="flex justify-between">
+                <span className="text-sm md:text-base text-slate-500 dark:text-gray-400">{t('cart_subtotal')}</span>
+                <span className="font-medium text-sm md:text-base text-slate-800 dark:text-white">{formatCurrency(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm md:text-base text-slate-500 dark:text-gray-400">{t('cart_tax')} ({(taxRate * 100).toFixed(0)}%)</span>
+                <span className="font-medium text-sm md:text-base text-slate-800 dark:text-white">{formatCurrency(tax)}</span>
+              </div>
+              <Separator className="dark:bg-white/10" />
+              <div className="flex justify-between items-center">
+                <span className="text-base md:text-lg font-bold text-slate-800 dark:text-white">{t('cart_total')}</span>
+                <span className="text-xl md:text-2xl font-bold text-amber-600 dark:text-yellow-400">{formatCurrency(total)}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="mt-4 md:mt-6">
+            <Button className="w-full text-sm md:text-lg h-11 md:h-12" size="lg" onClick={handleCheckout}>
+              <CreditCard className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+              {t('proceed_to_checkout')}
+            </Button>
           </div>
         </div>
       </div>
-      
-      {/* Cart Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
-        {cartItems.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items List */}
-            <div className="lg:col-span-2">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-display font-bold">Items ({cartItems.length})</h2>
-                <Button 
-                  variant="ghost" 
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 neon-border"
-                  onClick={async () => {
-                    await clearCart();
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Cart
-                </Button>
-              </div>
-              
-              {/* Cart Items Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {cartItems.map((item, index) => (
-                  <Card 
-                    key={item._id || item.id} 
-                    className="group glass-card hover:bg-white/10 transition-all duration-500 overflow-hidden animate-fade-in transform hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="relative overflow-hidden">
-                      <div className="h-48 bg-gradient-to-br from-yellow-400/20 to-amber-700/20 flex items-center justify-center">
-                        <div className="text-center p-4">
-                          <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <span className="text-slate-900 font-display font-bold text-2xl">{item.name[0]}</span>
-                          </div>
-                          <p className="text-sm text-gray-400">Food Image Placeholder</p>
-                        </div>
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                      
-                      {/* Remove button */}
-                      <div className="absolute top-3 right-3">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all duration-300 p-2"
-                          onClick={async () => {
-                            if (item.cartItemId) {
-                              await removeFromCart(item.cartItemId);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <div className="flex items-center space-x-1">
-                            <Star className="w-4 h-4 text-yellow-400 fill-current animate-pulse" />
-                            <span className="text-white font-semibold">4.8</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-display text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors duration-300 line-clamp-1">
-                          {item.name}
-                        </h3>
-                        <span className="text-xl font-bold gradient-text animate-pulse whitespace-nowrap ml-2">
-                          ${item.price.toFixed(2)}
-                        </span>
-                      </div>
-
-                      <p className="text-gray-400 mb-4 leading-relaxed text-sm line-clamp-2">
-                        {item.description}
-                      </p>
-
-                      {/* Quantity controls */}
-                      <div className="flex items-center justify-center gap-3 mb-4">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-8 w-8 p-0 bg-white/5 border-cyan-400/30 text-cyan-400 hover:bg-cyan-400/10 neon-border"
-                          onClick={async () => await updateCartItemQuantity(item._id, (item.quantity || 1) - 1)}
-                          disabled={(item.quantity || 1) <= 1}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        
-                        <span className="w-12 text-center font-semibold text-lg">{item.quantity || 1}</span>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-8 w-8 p-0 bg-white/5 border-cyan-400/30 text-cyan-400 hover:bg-cyan-400/10 neon-border"
-                          onClick={async () => await updateCartItemQuantity(item._id, (item.quantity || 1) + 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-
-                      <div className="text-center">
-                        <span className="text-yellow-400 font-semibold">
-                          Total: ${((item.quantity || 1) * item.price).toFixed(2)}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              
-              {/* Continue Shopping */}
-              <div className="mt-8 text-center">
-                <Link to="/menu" className="text-yellow-400 hover:text-yellow-300 inline-flex items-center animate-bounce-slow">
-                  ← Continue Shopping
-                </Link>
-              </div>
-            </div>
-            
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="glass-card p-6 animate-fade-in sticky top-24 neon-border">
-                <h2 className="text-2xl font-display font-bold mb-6 border-b border-white/10 pb-4">Order Summary</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Subtotal</span>
-                    <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Tax (8%)</span>
-                    <span className="text-white">${tax.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between pt-4 border-t border-white/10">
-                    <span className="text-lg text-white font-semibold">Total</span>
-                    <span className="text-lg text-yellow-400 font-semibold">${total.toFixed(2)}</span>
-                  </div>
-                  
-                  <Button 
-                    className="w-full mt-6 bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-900 hover:from-cyan-500 hover:to-purple-600 font-semibold shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50 transition-all duration-300 animate-shimmer"
-                    disabled={cartItems.length === 0}
-                    asChild
-                  >
-                    <Link to="/checkout">
-                      <CreditCard className="mr-2 h-5 w-5" />
-                      Proceed to Checkout
-                    </Link>
-                  </Button>
-                  
-                  <p className="text-xs text-gray-400 text-center mt-4">
-                    By proceeding, you agree to our Terms of Service and Privacy Policy.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          // Empty cart state
-          <div className="glass-card p-10 text-center animate-fade-in max-w-2xl mx-auto neon-border">
-            <div className="w-20 h-20 mx-auto mb-6 bg-white/5 rounded-full flex items-center justify-center">
-              <Trash2 className="h-10 w-10 text-gray-400" />
-            </div>
-            <h2 className="text-2xl font-display font-bold mb-3">Your cart is empty</h2>
-            <p className="text-gray-400 mb-6">
-              Add items to your cart to see them here.
-            </p>
-            <Button asChild className="bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-900 hover:from-cyan-500 hover:to-purple-600 font-semibold shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50 transition-all duration-300 animate-shimmer">
-              <Link to="/menu">
-                Explore Our Menu
-              </Link>
-            </Button>
-          </div>
-        )}
-      </div>
-      
-      <Footer />
     </div>
   );
 };

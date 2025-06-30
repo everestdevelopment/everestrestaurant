@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Clock, ChevronRight, Users, User, Phone, Mail, MessageSquare } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ChevronRight, Users, User, Phone, Mail, MessageSquare, CreditCard } from 'lucide-react';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -17,41 +17,20 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PaymePayment from '@/components/Payment/PaymePayment';
+import { formatCurrency } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader } from 'lucide-react';
 
-// Time slots for reservations
-const timeSlots = [
-  '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', 
-  '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM'
-];
+const PRICE_PER_GUEST = 20000;
 
-// Table types
-const tableTypes = [
-  {
-    id: 'standard',
-    name: 'Standard Table',
-    description: 'Regular dining table for 2-4 guests',
-    image: 'standard-table',
-  },
-  {
-    id: 'booth',
-    name: 'Booth',
-    description: 'Comfortable booth seating for 2-6 guests',
-    image: 'booth-table',
-  },
-  {
-    id: 'private',
-    name: 'Private Room',
-    description: 'Exclusive private dining for 6-12 guests',
-    image: 'private-room',
-  }
-];
-
-// Form schema
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Please enter your full name' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
   phone: z.string().min(10, { message: 'Please enter a valid phone number' }),
-  numberOfPeople: z.number().min(1).max(12),
+  guests: z.number().min(1, 'At least 1 guest').max(12, 'Maximum 12 guests'),
   date: z.date({ required_error: "Please select a date" }),
   time: z.string({ required_error: "Please select a time slot" }),
   notes: z.string().optional(),
@@ -59,61 +38,112 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+const timeSlots = [
+  '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', 
+  '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM'
+];
+
 const Reservations = () => {
-  const [selectedTime, setSelectedTime] = useState('');
-  const [success, setSuccess] = useState(false);
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      numberOfPeople: 2,
-      date: undefined,
-      time: '',
-      notes: '',
-    },
-  });
   const [loading, setLoading] = useState(false);
+  const [createdReservation, setCreatedReservation] = useState<any>(null);
+  const [showPayment, setShowPayment] = useState(false);
 
-  // Handle time slot selection
-  const handleTimeSelect = (time: string) => {
-    setSelectedTime(time);
-    form.setValue('time', time);
-  };
-
-  const onSubmit = async (data: FormData) => {
+  // Check if user is logged in
+  useEffect(() => {
     if (!user) {
       toast({
-        title: "Login required",
-        description: "Please login to make a reservation.",
-        variant: "destructive"
+        title: t('reservations_login_required_title'),
+        description: t('reservations_login_required_description'),
+        variant: 'destructive',
       });
       navigate('/login');
       return;
     }
+  }, [user, navigate, t]);
+
+  // Don't render the form if user is not logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <Navbar />
+        <div className="pt-24 md:pt-32 pb-8 md:pb-12">
+          <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 text-center">
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-slate-800 dark:gradient-text mb-4">
+              {t('reservations_login_required_title')}
+            </h1>
+            <p className="text-lg text-slate-600 dark:text-gray-400 mb-6">
+              {t('reservations_login_required_description')}
+            </p>
+            <Button onClick={() => navigate('/login')} className="text-lg px-8 py-3">
+              {t('nav_sign_in')}
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      date: undefined,
+      time: '',
+      guests: 1,
+    },
+  });
+
+  const { date, time, guests } = form.watch();
+  const totalPrice = guests * PRICE_PER_GUEST;
+
+  const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      await apiFetch('/reservations', {
+      const reservationData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        date: data.date,
+        time: data.time,
+        guests: data.guests,
+        pricePerGuest: PRICE_PER_GUEST,
+        totalPrice: totalPrice,
+        paymentMethod: 'Payme',
+        user: user._id
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/reservations`, {
         method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          guests: data.numberOfPeople,
-        })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(reservationData)
       });
-      setSuccess(true);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create reservation');
+      }
+
+      const newReservation = await response.json();
+      setCreatedReservation(newReservation);
+      setShowPayment(true);
+      
       toast({
-        title: "Reservation Request Submitted!",
-        description: "We've received your reservation request and will confirm it shortly.",
+        title: t('reservations_created_title'),
+        description: t('reservations_created_description'),
       });
-      form.reset();
-      setSelectedTime('');
     } catch (error: any) {
       toast({
-        title: "Reservation failed",
-        description: error.message || "There was an error submitting your reservation.",
+        title: t('reservations_fail_toast_title'),
+        description: error.message || t('reservations_fail_toast_description'),
         variant: "destructive"
       });
     } finally {
@@ -121,218 +151,198 @@ const Reservations = () => {
     }
   };
 
-  if (!user) return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
-      <Navbar />
-      <div className="text-center mt-32">
-        <h2 className="text-2xl font-bold mb-4">Please login to make a reservation</h2>
-        <Button onClick={() => navigate('/login')}>Go to Login</Button>
-      </div>
-      <Footer />
-    </div>
-  );
+  const handleReservation = async () => {
+    if (!date || !time || !guests) {
+      // ... existing code ...
+    } else {
+      // ... existing code ...
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
-      
-      {/* Page Header */}
-      <div className="pt-32 pb-12 md:pt-40 md:pb-20 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-4">
-              Reserve Your Table
+      <div className="pt-24 md:pt-32 pb-8 md:pb-12">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6">
+          <div className="text-center mb-6 md:mb-10">
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-slate-800 dark:gradient-text mb-2 md:mb-4">
+              {t('reservations_title')}
             </h1>
-            <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
-              Secure your place for an extraordinary dining experience
+            <p className="text-sm md:text-xl text-slate-600 dark:text-gray-400 px-2">
+              {t('reservations_description_paid')}
             </p>
           </div>
-        </div>
-      </div>
-      
-      {/* Reservation Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-24">
-        <div className="glass-card p-8 md:p-12 animate-fade-in">
-          {success && (
-            <div className="mb-8 p-4 bg-green-100 text-green-800 rounded">
-              Reservation submitted! We will contact you soon.
-            </div>
-          )}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Left Column - Personal Details */}
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-display font-bold mb-6">Your Information</h2>
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
+          
+          {!showPayment ? (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-8">
+                {/* Reservation Details Section */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-3 md:pb-6">
+                    <CardTitle className="flex items-center gap-2 md:gap-3 text-lg md:text-xl">
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm md:text-base">
+                        📅
+                      </div>
+                      {t('reservations_form_title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 md:space-y-4">
+                    <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Full Name</FormLabel>
+                        <FormLabel className="text-sm md:text-base">{t('reservations_form_name')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Smith" className="bg-white/5 border-white/10 text-white" {...field} />
+                          <Input {...field} className="h-10 md:h-11" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="email" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Email</FormLabel>
+                        <FormLabel className="text-sm md:text-base">{t('reservations_form_email')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="john@example.com" className="bg-white/5 border-white/10 text-white" {...field} />
+                          <Input {...field} className="h-10 md:h-11" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="phone" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Phone</FormLabel>
+                        <FormLabel className="text-sm md:text-base">{t('reservations_form_phone')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="(555) 123-4567" className="bg-white/5 border-white/10 text-white" {...field} />
+                          <Input {...field} className="h-10 md:h-11" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="numberOfPeople"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Number of Guests</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <Users className="mr-2 h-4 w-4 text-gray-400" />
-                            <Input 
-                              type="number" 
-                              min="1" 
-                              max="12" 
-                              className="bg-white/5 border-white/10 text-white w-24" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Date</FormLabel>
-                        <FormControl>
+                    )} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                      <FormField control={form.control} name="date" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm md:text-base">{t('reservations_form_date')}</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full justify-start text-left font-normal bg-white/5 border-white/10 text-white",
-                                  !field.value && "text-gray-400"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : "Pick a date"}
-                              </Button>
+                              <FormControl>
+                                <Button variant={"outline"} className={cn("w-full h-10 md:h-11 pl-3 text-left font-normal text-sm md:text-base", !field.value && "text-muted-foreground")}>
+                                  {field.value ? format(field.value, "PPP") : <span>{t('reservations_form_date_placeholder')}</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date()} /></PopoverContent>
                           </Popover>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Time</FormLabel>
-                        <FormControl>
-                          <div className="flex flex-wrap gap-2">
-                            {['5:00 PM','5:30 PM','6:00 PM','6:30 PM','7:00 PM','7:30 PM','8:00 PM','8:30 PM','9:00 PM','9:30 PM'].map((slot) => (
-                              <Button
-                                key={slot}
-                                type="button"
-                                variant={field.value === slot ? "default" : "outline"}
-                                className={field.value === slot ? "bg-yellow-400 text-slate-900" : "bg-white/5 border-white/10 text-white"}
-                                onClick={() => handleTimeSelect(slot)}
-                              >
-                                <Clock className="mr-2 h-4 w-4" /> {slot}
-                              </Button>
-                            ))}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-300">Special Requests or Notes</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 hover:from-yellow-500 hover:to-amber-600 font-semibold mt-8">
-                {loading ? 'Booking...' : 'Book a Table'}
-              </Button>
-            </form>
-          </Form>
-        </div>
-        
-        {/* Policy Information */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <h3 className="text-xl font-display font-semibold mb-3">Reservation Policy</h3>
-            <p className="text-gray-400 text-sm">
-              Reservations can be made up to 30 days in advance. We hold reservations for 15 minutes past the scheduled time.
-            </p>
-          </div>
-          
-          <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <h3 className="text-xl font-display font-semibold mb-3">Cancellation Policy</h3>
-            <p className="text-gray-400 text-sm">
-              Cancellations must be made at least 24 hours before your reservation to avoid a cancellation fee.
-            </p>
-          </div>
-          
-          <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <h3 className="text-xl font-display font-semibold mb-3">Large Parties</h3>
-            <p className="text-gray-400 text-sm">
-              For parties of more than 8 guests, please contact us directly at (555) 123-4567 for special arrangements.
-            </p>
-          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="guests" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm md:text-base">{t('reservations_form_guests')}</FormLabel>
+                          <FormControl>
+                            <Input type="number" min="1" max="12" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 1)} className="h-10 md:h-11" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                    <div>
+                      <FormLabel className="text-sm md:text-base">{t('reservations_form_time')}</FormLabel>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 md:gap-2 pt-2">
+                        {timeSlots.map(time => (
+                          <Button 
+                            key={time} 
+                            type="button" 
+                            variant={form.watch('time') === time ? 'default' : 'outline'} 
+                            onClick={() => form.setValue('time', time)}
+                            className="h-8 md:h-10 text-xs md:text-sm"
+                          >
+                            {time}
+                          </Button>
+                        ))}
+                      </div>
+                      <FormMessage className="pt-2">{form.formState.errors.time?.message}</FormMessage>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Reservation Summary Section */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-3 md:pb-6">
+                    <CardTitle className="flex items-center gap-2 md:gap-3 text-lg md:text-xl">
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-sm md:text-base">
+                        📋
+                      </div>
+                      {t('reservations_summary_title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 md:space-y-4">
+                      <div className="flex justify-between items-center p-2 md:p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                        <span className="font-medium text-sm md:text-base">{t('reservations_fee_per_guest')}</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400 text-sm md:text-base">{formatCurrency(PRICE_PER_GUEST)}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 md:p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                        <span className="font-medium text-sm md:text-base">{t('reservations_guests_count')}</span>
+                        <span className="font-bold text-green-600 dark:text-green-400 text-sm md:text-base">{guests}</span>
+                      </div>
+                      <div className="border-t-2 border-slate-200 dark:border-slate-600 my-3 md:my-4"></div>
+                      <div className="flex justify-between items-center p-3 md:p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg">
+                        <span className="text-lg md:text-xl font-bold text-slate-800 dark:text-white">{t('checkout_total_label')}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalPrice)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 md:py-4 text-base md:text-lg font-semibold h-12 md:h-14"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 md:h-5 md:w-5 animate-spin" />
+                      <span className="text-sm md:text-base">{t('reservations_creating')}</span>
+                    </>
+                  ) : (
+                    <span className="text-sm md:text-base">{t('reservations_create_button')}</span>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          ) : (
+            /* Payment Section */
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 md:gap-3 text-lg md:text-xl">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-sm md:text-base">
+                    💳
+                  </div>
+                  {t('checkout_payment_title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 md:p-6">
+                <PaymePayment
+                  reservationId={createdReservation._id}
+                  amount={totalPrice}
+                  onSuccess={() => {
+                    toast({
+                      title: t('reservations_success_toast_title'),
+                      description: t('reservations_success_toast_description_paid', { price: totalPrice }),
+                    });
+                    navigate('/my-bookings');
+                  }}
+                  onFailure={(error) => {
+                    toast({
+                      title: t('payment.error_title'),
+                      description: error,
+                      variant: 'destructive',
+                    });
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };

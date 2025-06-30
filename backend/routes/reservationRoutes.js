@@ -1,26 +1,30 @@
 import express from 'express';
-import { 
-  createReservation, 
-  getAllReservations, 
-  updateReservationStatus,
-  getMyReservations,
-  cancelReservation
-} from '../controllers/reservationController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import cors from 'cors';
+import {
+  createReservation,
+  getMyReservations,
+  cancelReservation,
+  getAllReservations,
+  updateReservationStatus,
+  deleteReservation,
+  getReservationStats
+} from '../controllers/reservationController.js';
 
 const router = express.Router();
 
-router.route('/')
-  .post(createReservation)
-  .get(protect, admin, getAllReservations);
-
+// Protected routes (require authentication)
+router.post('/', protect, createReservation);
 router.get('/myreservations', protect, getMyReservations);
+router.put('/:id/cancel', protect, cancelReservation);
 
-router.route('/:id/status')
-  .put(protect, admin, updateReservationStatus);
+// Admin routes
+router.get('/admin', protect, admin, getAllReservations);
+router.put('/admin/:id', protect, admin, updateReservationStatus);
+router.delete('/admin/:id', protect, admin, deleteReservation);
+router.get('/admin/stats', protect, admin, getReservationStats);
 
-router.route('/:id/cancel')
-    .put(protect, cancelReservation);
+// console.log('Reservation routes loaded with admin routes:');
+// console.log('- PUT /admin/:id (updateReservationStatus)');
+// console.log('- DELETE /admin/:id (deleteReservation)');
 
 export default router; 

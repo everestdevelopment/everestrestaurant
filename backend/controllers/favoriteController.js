@@ -27,10 +27,20 @@ export const addFavorite = asyncHandler(async (req, res) => {
 
 // DELETE /api/favorites/:itemId
 export const removeFavorite = asyncHandler(async (req, res) => {
-  let favorite = await Favorite.findOne({ user: req.user._id });
+  const favorite = await Favorite.findOne({ user: req.user._id });
   if (!favorite) return res.status(404).json({ message: 'Favorites not found' });
-  
   favorite.items = favorite.items.filter(i => i.toString() !== req.params.itemId);
+  await favorite.save();
+  
+  // Return updated favorites with populated items
+  const updatedFavorite = await Favorite.findOne({ user: req.user._id }).populate('items');
+  res.json({ items: updatedFavorite.items });
+});
+
+export const removeFromFavorites = asyncHandler(async (req, res) => {
+  const favorite = await Favorite.findOne({ user: req.user._id });
+  if (!favorite) return res.status(404).json({ message: 'Favorites not found' });
+  favorite.items = favorite.items.filter(i => i.toString() !== req.params.productId);
   await favorite.save();
   
   // Return updated favorites with populated items

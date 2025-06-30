@@ -1,37 +1,39 @@
-
 import React from 'react';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const About = () => {
+  const { t } = useTranslation();
+
   // Restaurant history milestones
   const timeline = [
     {
       year: '2010',
-      title: 'The Beginning',
-      description: 'Everest Rest was founded by renowned chef Michael Chang with a vision to create a dining experience that reaches new heights of culinary excellence.'
+      title: t('about_timeline1_title'),
+      description: t('about_timeline1_desc')
     },
     {
       year: '2013',
-      title: 'First Michelin Star',
-      description: 'Just three years after opening, our dedication to exceptional cuisine was recognized with our first Michelin star.'
+      title: t('about_timeline2_title'),
+      description: t('about_timeline2_desc')
     },
     {
       year: '2016',
-      title: 'Expansion',
-      description: 'We expanded our dining room and added our exclusive Summit Room for private events and special occasions.'
+      title: t('about_timeline3_title'),
+      description: t('about_timeline3_desc')
     },
     {
       year: '2019',
-      title: 'Second Michelin Star',
-      description: 'Our continued innovation and commitment to excellence earned us our second Michelin star.'
+      title: t('about_timeline4_title'),
+      description: t('about_timeline4_desc')
     },
     {
       year: '2022',
-      title: 'Sustainability Award',
-      description: 'Recognized for our farm-to-table approach and sustainable practices with the Green Dining Award.'
+      title: t('about_timeline5_title'),
+      description: t('about_timeline5_desc')
     },
   ];
 
@@ -44,10 +46,10 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-4">
-              Our Story
+              {t('about_title')}
             </h1>
             <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-400 max-w-3xl mx-auto">
-              Crafting extraordinary dining experiences since 2010
+              {t('about_subtitle')}
             </p>
           </div>
         </div>
@@ -58,28 +60,24 @@ const About = () => {
         {/* Introduction */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
           <div className="glass-card p-8 animate-fade-in-up">
-            <h2 className="text-3xl font-display font-bold mb-6 text-black dark:text-white">The Everest Experience</h2>
+            <h2 className="text-3xl font-display font-bold mb-6 text-black dark:text-white">{t('about_experience_title')}</h2>
             <p className="text-gray-800 dark:text-gray-300 leading-relaxed mb-6">
-              At Everest Rest, we believe that dining should be more than just a meal—it should be a journey for the senses, an expedition of taste that takes you to new culinary heights.
+              {t('about_experience_p1')}
             </p>
             <p className="text-gray-800 dark:text-gray-300 leading-relaxed mb-6">
-              Our restaurant was born from a passion for exceptional ingredients, innovative techniques, and the art of hospitality. Founded in 2010 by Chef Michael Chang, we've grown from a small eatery to one of the most celebrated dining destinations in Manhattan.
+              {t('about_experience_p2')}
             </p>
             <p className="text-gray-800 dark:text-gray-300 leading-relaxed">
-              Each dish tells a story—of the farmers who grew the ingredients, the traditions that inspired the recipe, and the creative vision of our culinary team. We invite you to join us at the summit of fine dining.
+              {t('about_experience_p3')}
             </p>
           </div>
           
           <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-gradient-to-br from-yellow-400/20 to-amber-700/20 aspect-square w-full flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="w-40 h-40 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-slate-900 font-display font-bold text-6xl">E</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-black dark:text-white">Chef's Portrait</h3>
-                <p className="text-gray-700 dark:text-gray-400">Chef Michael Chang</p>
-              </div>
-            </div>
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Chef_Anton_Mosimann_OBE_DL.jpg/1200px-Chef_Anton_Mosimann_OBE_DL.jpg" 
+              alt="Portrait of Chef Gordon Ramsay" 
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
         
@@ -87,43 +85,43 @@ const About = () => {
         <div className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold gradient-text mb-6">
-              Our Mission & Values
+              {t('about_mission_title')}
             </h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="glass-card p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <h3 className="text-2xl font-display font-bold mb-4 text-yellow-400">Vision</h3>
+              <h3 className="text-2xl font-display font-bold mb-4 text-yellow-400">{t('about_vision_title')}</h3>
               <p className="text-gray-800 dark:text-gray-300 leading-relaxed">
-                To be recognized globally as the pinnacle of culinary innovation and service excellence, setting new standards in the fine dining industry.
+                {t('about_vision_text')}
               </p>
             </div>
             
             <div className="glass-card p-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <h3 className="text-2xl font-display font-bold mb-4 text-yellow-400">Mission</h3>
+              <h3 className="text-2xl font-display font-bold mb-4 text-yellow-400">{t('about_mission_subtitle')}</h3>
               <p className="text-gray-800 dark:text-gray-300 leading-relaxed">
-                To create transcendent dining experiences by combining the finest ingredients, masterful technique, and impeccable service in an atmosphere of understated luxury.
+                {t('about_mission_text')}
               </p>
             </div>
             
             <div className="glass-card p-8 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <h3 className="text-2xl font-display font-bold mb-4 text-yellow-400">Values</h3>
+              <h3 className="text-2xl font-display font-bold mb-4 text-yellow-400">{t('about_values_title')}</h3>
               <ul className="text-gray-800 dark:text-gray-300 space-y-2">
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">•</span>
-                  Excellence in every detail
+                  {t('about_value1')}
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">•</span>
-                  Sustainability and ethical sourcing
+                  {t('about_value2')}
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">•</span>
-                  Innovation with respect for tradition
+                  {t('about_value3')}
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">•</span>
-                  Genuine hospitality and inclusivity
+                  {t('about_value4')}
                 </li>
               </ul>
             </div>
@@ -134,7 +132,7 @@ const About = () => {
         <div className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold gradient-text mb-6">
-              Our Journey
+              {t('about_journey_title')}
             </h2>
           </div>
           
@@ -174,18 +172,15 @@ const About = () => {
         
         {/* CTA */}
         <div className="glass-card p-12 text-center animate-fade-in-up">
-          <h2 className="text-3xl font-display font-bold mb-6 text-black dark:text-white">Experience the Everest Difference</h2>
+          <h2 className="text-3xl font-display font-bold mb-6 text-black dark:text-white">{t('about_cta_title')}</h2>
           <p className="text-gray-800 dark:text-gray-300 max-w-3xl mx-auto mb-8">
-            Join us for an unforgettable dining experience that will elevate your senses to new heights.
-            Reserve your table today and embark on a culinary journey like no other.
+            {t('about_cta_text')}
           </p>
           <Button asChild className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 hover:from-yellow-500 hover:to-amber-600 font-semibold px-8 py-6 h-auto text-lg">
-            <Link to="/reservations">Reserve Your Table</Link>
+            <Link to="/reservations">{t('about_cta_button')}</Link>
           </Button>
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };

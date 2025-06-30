@@ -1,118 +1,95 @@
-
 import React from 'react';
-import { Star, Heart, ShoppingCart } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useShoppingContext } from '@/context/ShoppingContext';
-import { toast } from '@/hooks/use-toast';
-import { menuItems } from '@/data/menuData';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api';
+import { Product } from '@/types';
+import MenuItemSkeleton from '../Menu/MenuItemSkeleton';
+import MenuItemCard from '../Menu/MenuItemCard';
+import { useShopping } from '@/context/ShoppingContext';
 
 const FeaturedDishes = () => {
-  const { addToCart, addToLiked, likedItems } = useShoppingContext();
+  const { t } = useTranslation();
+  const { likedItems, toggleLike, addToCart } = useShopping();
 
-  const isItemLiked = (itemId: number) => {
-    return likedItems.some(item => item.id === itemId);
-  };
+  const { data: featuredResponse, isLoading } = useQuery<{ data: { docs: Product[] } }>({
+    queryKey: ['featured-products'],
+    queryFn: () => apiFetch('/products?sortBy=rating&sortOrder=desc&limit=20'),
+  });
 
-  // Get first 3 items from different categories
-  const featuredItems = [
-    menuItems.find(item => item.id === 1), // Truffle Arancini
-    menuItems.find(item => item.id === 6), // Himalayan Lamb Tenderloin  
-    menuItems.find(item => item.id === 21), // Chocolate Soufflé
-  ].filter(Boolean);
+  // Extract products from paginated response
+  const featured = featuredResponse?.data?.docs || [];
 
-  const handleAddToCart = (item: any) => {
-    addToCart(item);
-    toast({
-      title: "Added to cart",
-      description: `${item.name} has been added to your cart.`,
-    });
-  };
+  // Helper to get 8 random products
+  function getRandomProducts(products: Product[], count: number) {
+    if (!products || !Array.isArray(products)) return [];
+    const shuffled = [...products].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+  const randomFeatured = getRandomProducts(featured, 8);
 
-  const handleAddToLiked = (item: any) => {
-    addToLiked(item);
-    toast({
-      title: "Added to favorites",
-      description: `${item.name} has been added to your favorites.`,
-    });
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.15,
+        duration: 0.6,
+        ease: 'easeOut',
+      },
+    }),
   };
 
   return (
-    <section className="py-24 bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-display font-bold gradient-text mb-4">
-            Featured Dishes
+    <section className="py-20 sm:py-32 bg-slate-50 dark:bg-slate-800/50 overflow-hidden">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl sm:text-4xl font-bold font-display text-slate-800 dark:text-white mb-4">
+            {t('popular_dishes_title', 'Mashhur Taomlar')}
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Discover our chef's carefully curated selection of exceptional dishes
+          <p className="text-lg text-slate-600 dark:text-gray-400 max-w-2xl mx-auto">
+            {t('popular_dishes_subtitle', "Eng sevimlilarini tatib ko'ring, siz uchun maxsus tanlangan.")}
           </p>
+        </motion.div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {isLoading ? (
+            Array.from({ length: 8 }).map((_, i) => <MenuItemSkeleton key={i} />)
+          ) : (
+            randomFeatured.map((item, i) => (
+              <motion.div
+                key={item._id}
+                custom={i}
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                className="h-full"
+              >
+                <MenuItemCard 
+                  product={item}
+                  isLiked={likedItems.some(likedItem => likedItem._id === item._id)}
+                  onToggleLike={toggleLike}
+                  onAddToCart={addToCart}
+                />
+              </motion.div>
+            ))
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featuredItems.map((item, index) => (
-            <Card 
-              key={item.id}
-              className="group glass-card hover:bg-white/10 transition-all duration-500 overflow-hidden animate-fade-in transform hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20"
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              <div className="relative overflow-hidden">
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                
-                <div className="absolute top-3 right-3">
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`bg-white/10 backdrop-blur-sm border transition-all duration-300 p-2 ${
-                      isItemLiked(item.id) 
-                        ? "bg-pink-500/20 border-pink-500/30 text-pink-400 shadow-lg shadow-pink-400/20" 
-                        : "border-pink-400/30 text-pink-400 hover:bg-pink-500/20 hover:shadow-pink-400/40"
-                    }`}
-                    onClick={() => handleAddToLiked(item)}
-                  >
-                    <Heart className={`w-4 h-4 ${isItemLiked(item.id) ? 'fill-current' : ''}`} />
-                  </Button>
-                </div>
-
-                <div className="absolute bottom-3 left-3 right-3">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current animate-pulse" />
-                      <span className="text-white font-semibold">{item.rating}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-display text-xl font-semibold text-white group-hover:text-cyan-400 transition-colors duration-300">
-                    {item.name}
-                  </h3>
-                  <span className="text-2xl font-bold gradient-text animate-pulse">
-                    ${item.price}
-                  </span>
-                </div>
-
-                <p className="text-gray-400 mb-6 leading-relaxed">
-                  {item.description}
-                </p>
-
-                <Button 
-                  className="w-full bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-900 hover:from-cyan-500 hover:to-purple-600 font-semibold shadow-lg shadow-cyan-400/30 hover:shadow-cyan-400/50 transition-all duration-300 animate-shimmer"
-                  onClick={() => handleAddToCart(item)}
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Add to Cart
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="text-center mt-16">
+          <Button asChild size="lg" className="bg-slate-800 text-white hover:bg-slate-700 dark:bg-amber-500 dark:text-black dark:hover:bg-amber-600">
+            <Link to="/menu">{t('popular_dishes_button', "To'liq menyu")}</Link>
+          </Button>
         </div>
       </div>
     </section>

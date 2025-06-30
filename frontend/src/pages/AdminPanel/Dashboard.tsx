@@ -1,0 +1,360 @@
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  ShoppingCart, 
+  CreditCard, 
+  Package, 
+  TrendingDown, 
+  Users, 
+  Calendar,
+  MessageSquare,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Eye
+} from 'lucide-react';
+import { apiFetch } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
+import { useAdminNotifications } from '@/context/AdminNotificationContext';
+import { useAuth } from '@/context/AuthContext';
+import { formatCurrency, getAdminStatusText } from '@/lib/utils';
+
+interface DashboardStats {
+  totalOrders: number;
+  todayOrders: number;
+  thisMonthOrders: number;
+  totalRevenue: number;
+  todayRevenue: number;
+  thisMonthRevenue: number;
+  pendingOrders: number;
+  deliveredOrders: number;
+  cancelledOrders: number;
+  totalReservations: number;
+  todayReservations: number;
+  confirmedReservations: number;
+  cancelledReservations: number;
+  totalUsers: number;
+  newUsers: number;
+  unreadMessages: number;
+  recentOrders: any[];
+  recentReservations: any[];
+  recentCancellations: any[];
+  statusBreakdown: {
+    orders: { [key: string]: number };
+    reservations: { [key: string]: number };
+  };
+}
+
+const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const { notifications, unreadCount, markAllAsRead } = useAdminNotifications();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const data = await apiFetch('/admin/dashboard/stats');
+      setStats(data);
+    } catch (err: any) {
+      console.error('Dashboard stats error:', err);
+      setError(err.message || 'Statistikalar yuklanmadi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Pending': return <Package className="w-4 h-4" />;
+      case 'Confirmed': return <CheckCircle className="w-4 h-4" />;
+      case 'Delivered': return <CheckCircle className="w-4 h-4" />;
+      case 'Cancelled': return <XCircle className="w-4 h-4" />;
+      default: return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      case 'Confirmed': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      case 'Delivered': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      case 'Cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Statistikalar yuklanmoqda...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-4">{error}</div>
+        <Button onClick={fetchStats} variant="outline">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Qayta urinish
+        </Button>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  return (
+    <div className="admin-section p-4 md:p-6 space-y-6">
+      <div className="admin-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="admin-title">Admin paneli</h1>
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {unreadCount} yangi
+            </Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={fetchStats}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Yangilash
+          </Button>
+        </div>
+      </div>
+      
+      {/* Main Stats Cards */}
+      <div className="admin-stats-grid">
+        <Card className="admin-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Umumiy buyurtmalar</CardTitle>
+            <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl md:text-2xl font-bold">{stats.totalOrders}</div>
+            <div className="text-xs text-muted-foreground">Bugun: {stats.todayOrders}</div>
+            <div className="text-xs text-muted-foreground">Bu oy: {stats.thisMonthOrders}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="admin-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Umumiy daromad</CardTitle>
+            <CreditCard className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl md:text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+            <div className="text-xs text-muted-foreground">Bugun: {formatCurrency(stats.todayRevenue)}</div>
+            <div className="text-xs text-muted-foreground">Bu oy: {formatCurrency(stats.thisMonthRevenue)}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="admin-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Rezervatsiyalar</CardTitle>
+            <Calendar className="w-5 h-5 md:w-6 md:h-6 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl md:text-2xl font-bold">{stats.totalReservations}</div>
+            <div className="text-xs text-muted-foreground">Bugun: {stats.todayReservations}</div>
+            <div className="text-xs text-muted-foreground">Tasdiqlangan: {stats.confirmedReservations}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="admin-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Foydalanuvchilar</CardTitle>
+            <Users className="w-5 h-5 md:w-6 md:h-6 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl md:text-2xl font-bold">{stats.totalUsers}</div>
+            <div className="text-xs text-muted-foreground">Yangi: {stats.newUsers}</div>
+            <div className="text-xs text-muted-foreground">Xabarlar: {stats.unreadMessages}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="admin-card">
+          <CardHeader>
+            <CardTitle className="text-lg">Buyurtmalar holati</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Kutilmoqda</span>
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                {stats.pendingOrders}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Yetkazib berildi</span>
+              <Badge variant="outline" className="bg-green-50 text-green-700">
+                {stats.deliveredOrders}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Bekor qilindi</span>
+              <Badge variant="outline" className="bg-red-50 text-red-700">
+                {stats.cancelledOrders}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="admin-card">
+          <CardHeader>
+            <CardTitle className="text-lg">Rezervatsiyalar holati</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Tasdiqlangan</span>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                {stats.confirmedReservations}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Bekor qilindi</span>
+              <Badge variant="outline" className="bg-red-50 text-red-700">
+                {stats.cancelledReservations}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Umumiy</span>
+              <Badge variant="outline">
+                {stats.totalReservations}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activities */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Orders */}
+        {stats.recentOrders && stats.recentOrders.length > 0 && (
+          <Card className="admin-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5" />
+                So'ngi buyurtmalar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.recentOrders.slice(0, 5).map((order: any) => (
+                  <div key={order._id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">#{order._id.slice(-6)}</div>
+                      <div className="text-xs text-gray-500">{order.user?.name || 'Noma\'lum'}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{formatCurrency(order.totalPrice)}</div>
+                      <Badge className={`text-xs ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        {getAdminStatusText(order.status)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recent Cancellations */}
+        {stats.recentCancellations && stats.recentCancellations.length > 0 && (
+          <Card className="admin-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-red-500" />
+                So'ngi bekor qilishlar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.recentCancellations.slice(0, 5).map((item: any) => (
+                  <div key={item._id} className="flex items-center justify-between p-3 border rounded-lg bg-red-50 dark:bg-red-900/10">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">
+                        {item.type === 'order' ? 'Buyurtma' : 'Rezervatsiya'} #{item._id.slice(-6)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(item.updatedAt || item.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-red-600 dark:text-red-400">
+                        {item.user?.name || 'Mijoz'} tomonidan
+                      </div>
+                      <Badge variant="destructive" className="text-xs">
+                        Bekor qilindi
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Notifications */}
+      {notifications.length > 0 && (
+        <Card className="admin-card">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                So'ngi xabarlar
+              </span>
+              <Button variant="outline" size="sm" onClick={markAllAsRead}>
+                Barchasini o'qilgan deb belgilash
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {notifications.slice(0, 5).map((notification) => (
+                <div 
+                  key={notification.id} 
+                  className={`flex items-center justify-between p-3 border rounded-lg ${
+                    !notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{notification.title}</div>
+                    <div className="text-xs text-gray-500">{notification.message}</div>
+                    <div className="text-xs text-gray-400">
+                      {notification.timestamp.toLocaleString()}
+                    </div>
+                  </div>
+                  {!notification.read && (
+                    <Badge variant="secondary" className="text-xs">
+                      Yangi
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default AdminDashboard; 
