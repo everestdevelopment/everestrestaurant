@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -25,10 +24,10 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           <Button
             key={category.id}
             variant={activeCategory === category.id ? "default" : "outline"}
-            className={`whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2 transition-all duration-300 ${
+            className={`whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2 transition-all duration-300 border-0 ${
               activeCategory === category.id 
-                ? "neon-glow animate-pulse-neon" 
-                : "border-cyan-400/30 text-cyan-400 hover:bg-cyan-400/10"
+                ? "bg-slate-800 text-white dark:bg-yellow-400 dark:text-slate-900 shadow-lg" 
+                : "text-slate-600 dark:text-cyan-400 hover:bg-slate-200 dark:hover:bg-cyan-400/10"
             }`}
             onClick={() => onCategoryChange(category.id)}
           >

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -28,6 +29,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const Signup = () => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
@@ -48,14 +50,14 @@ const Signup = () => {
     try {
       await signup(data.name, data.email, data.password);
       toast({
-        title: "Account created successfully!",
-        description: "Welcome to Everest Rest. You can now log in.",
+        title: t('signup_success_title'),
+        description: t('signup_success_desc'),
       });
       navigate('/login');
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Registration failed",
-        description: error.message || "There was an error creating your account. Please try again.",
+        title: t('signup_fail_title'),
+        description: error.message || t('signup_fail_desc'),
         variant: "destructive",
       });
     }
@@ -70,21 +72,21 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
       
-      <div className="pt-32 pb-12 md:pt-40 md:pb-20 bg-slate-900">
+      <div className="pt-32 pb-12 md:pt-40 md:pb-20">
         <div className="max-w-md mx-auto px-4 sm:px-6">
           <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-display font-bold gradient-text mb-2">
-              Create Account
+            <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-800 dark:gradient-text mb-2">
+              {t('signup_title')}
             </h1>
-            <p className="text-gray-400">
-              Join us for an exceptional dining experience
+            <p className="text-slate-600 dark:text-gray-400">
+              {t('signup_subtitle')}
             </p>
           </div>
           
-          <div className="glass-card p-8 animate-fade-in">
+          <div className="bg-white dark:glass-card shadow-lg rounded-lg p-8 animate-fade-in">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -92,9 +94,9 @@ const Signup = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Name</FormLabel>
+                      <FormLabel className="text-slate-700 dark:text-gray-300">{t('signup_form_name')}</FormLabel>
                       <FormControl>
-                        <Input type="text" placeholder="Your Name" className="bg-white/5 border-white/10 text-white" {...field} />
+                        <Input type="text" placeholder={t('signup_form_name_placeholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -106,9 +108,9 @@ const Signup = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Email</FormLabel>
+                      <FormLabel className="text-slate-700 dark:text-gray-300">{t('signup_form_email')}</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="your@email.com" className="bg-white/5 border-white/10 text-white" {...field} />
+                        <Input type="email" placeholder={t('signup_form_email_placeholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -120,18 +122,18 @@ const Signup = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Password</FormLabel>
+                      <FormLabel className="text-slate-700 dark:text-gray-300">{t('signup_form_password')}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input 
                             type={showPassword ? "text" : "password"} 
                             placeholder="••••••••" 
-                            className="bg-white/5 border-white/10 text-white pr-10" 
+                            className="pr-10" 
                             {...field} 
                           />
                           <button 
                             type="button" 
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-slate-700 dark:hover:text-white"
                             onClick={togglePasswordVisibility}
                           >
                             {showPassword ? (
@@ -152,18 +154,18 @@ const Signup = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Confirm Password</FormLabel>
+                      <FormLabel className="text-slate-700 dark:text-gray-300">{t('signup_form_confirm_password')}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input 
                             type={showConfirmPassword ? "text" : "password"} 
                             placeholder="••••••••" 
-                            className="bg-white/5 border-white/10 text-white pr-10" 
+                            className="pr-10" 
                             {...field} 
                           />
                           <button 
                             type="button" 
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-slate-700 dark:hover:text-white"
                             onClick={toggleConfirmPasswordVisibility}
                           >
                             {showConfirmPassword ? (
@@ -187,20 +189,16 @@ const Signup = () => {
                       <FormControl>
                         <input
                           type="checkbox"
-                          className="h-4 w-4 mt-1 accent-yellow-400 rounded border-gray-300"
+                          className="h-4 w-4 mt-1 accent-yellow-500 rounded border-gray-300"
                           checked={field.value}
                           onChange={field.onChange}
                         />
                       </FormControl>
                       <div>
-                        <FormLabel className="text-sm text-gray-400 cursor-pointer">
-                          I agree to the{' '}
-                          <Link to="/terms" className="text-yellow-400 hover:text-yellow-300">
-                            terms of service
-                          </Link>{' '}
-                          and{' '}
-                          <Link to="/privacy" className="text-yellow-400 hover:text-yellow-300">
-                            privacy policy
+                        <FormLabel className="text-sm text-slate-600 dark:text-gray-400 cursor-pointer">
+                          {t('signup_form_terms_agree')}{' '}
+                          <Link to="/privacy-policy" className="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300">
+                            {t('signup_form_terms_privacy_policy')}
                           </Link>
                         </FormLabel>
                         <FormMessage />
@@ -218,20 +216,19 @@ const Signup = () => {
                     <div className="h-5 w-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto"></div>
                   ) : (
                     <>
-                      <UserPlus className="mr-2 h-4 w-4" /> Create Account
+                      <UserPlus className="mr-2 h-4 w-4" /> {t('signup_form_submit_btn')}
                     </>
                   )}
                 </Button>
               </form>
             </Form>
             
-            <div className="mt-6 pt-6 border-t border-white/10 text-center">
-              <p className="text-sm text-gray-400">
-                 Already have an account?{' '}
-                <Link to="/login" className="text-yellow-400 hover:text-yellow-300 font-medium">
-                  Sign in 
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 text-center">
+              <p className="text-sm text-slate-600 dark:text-gray-400">
+                {t('signup_already_have_account')}{' '}
+                <Link to="/login" className="text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300 font-medium">
+                  {t('signup_login_link')}
                 </Link>
-                <br/><a href="/admin/login" className="text-yellow-400 hover:text-yellow-300 font-medium">admin login</a>
               </p>
             </div>
           </div>

@@ -26,9 +26,11 @@ const sendEmail = async (options) => {
   // 3. Actually send the email
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Message sent: %s', info.messageId);
+    // eslint-disable-next-line no-console
+    // console.log('Message sent: %s', info.messageId);
     return info;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error sending email:', error);
     throw new Error('Email could not be sent');
   }
