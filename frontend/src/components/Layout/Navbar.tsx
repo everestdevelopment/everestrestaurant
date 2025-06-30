@@ -206,6 +206,7 @@ const Navbar = () => {
                   {link.href === '/admin' ? (
                     <NavLink
                       to={link.href}
+                      onClick={() => setIsOpen(false)}
                       className={({ isActive }) =>
                         `text-2xl font-medium block py-2 transition-colors duration-150 ${isActive ? 'text-yellow-500 dark:text-yellow-400' : 'text-slate-700 dark:text-gray-200'} hover:text-yellow-500 dark:hover:text-yellow-400`
                       }
@@ -220,6 +221,7 @@ const Navbar = () => {
                   ) : (
                     <NavLink
                       to={link.href}
+                      onClick={() => setIsOpen(false)}
                       className={({ isActive }) =>
                         `text-2xl font-medium block py-2 transition-colors duration-150 ${isActive ? 'text-yellow-500 dark:text-yellow-400' : 'text-slate-700 dark:text-gray-200'} hover:text-yellow-500 dark:hover:text-yellow-400`
                       }
@@ -248,14 +250,14 @@ const Navbar = () => {
                 </div>
                 ) : (
                 <div className="grid grid-cols-2 gap-4">
-                    <Button asChild variant="outline" size="lg" className="border-slate-300 dark:border-slate-700 text-slate-600 dark:text-gray-300"><Link to="/login">{t('nav_sign_in')}</Link></Button>
-                    <Button asChild size="lg" className="bg-slate-800 text-white dark:bg-white dark:text-slate-900"><Link to="/signup">{t('nav_sign_up')}</Link></Button>
+                    <Button asChild variant="outline" size="lg" className="border-slate-300 dark:border-slate-700 text-slate-600 dark:text-gray-300"><Link to="/login" onClick={() => setIsOpen(false)}>{t('nav_sign_in')}</Link></Button>
+                    <Button asChild size="lg" className="bg-slate-800 text-white dark:bg-white dark:text-slate-900"><Link to="/signup" onClick={() => setIsOpen(false)}>{t('nav_sign_up')}</Link></Button>
                 </div>
              )}
           </div>
 
           <Button asChild size="lg" className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 hover:from-yellow-500 hover:to-amber-600 font-semibold">
-            <Link to="/about">{t('nav_about_us')}</Link>
+            <Link to="/about" onClick={() => setIsOpen(false)}>{t('nav_about_us')}</Link>
           </Button>
 
         </div>
