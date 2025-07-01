@@ -11,7 +11,7 @@ const getFullImageUrl = (imagePath) => {
 
 // GET /api/products (public)
 export const getProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 20, category, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+  const { page = 1, limit = 100, category, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
   
   const query = {};
   if (category) query.category = category;

@@ -120,27 +120,54 @@ const AdminProducts: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Helper function to normalize category names
+  const normalizeCategory = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'Appetizers': 'appetizers',
+      'Main Courses': 'main_courses',
+      'Desserts': 'desserts',
+      'Beverages': 'beverages',
+      'Pizza': 'pizza',
+      'Pasta': 'pasta',
+      'Salads': 'salads',
+      'Seafood': 'seafood',
+      'Steaks': 'steaks',
+      'Soups': 'soups',
+      'Grilled': 'grilled',
+      'Vegan': 'vegan',
+      'Sushi': 'sushi',
+      'Sandwiches': 'sandwiches',
+      'Breakfast': 'breakfast',
+      'Kids': 'kids',
+      'Specials': 'specials',
+      'Cocktails': 'cocktails',
+      'Smoothies': 'smoothies'
+    };
+    
+    return categoryMap[category] || category;
+  };
+
   const categories = [
     { value: 'all', label: 'Barcha mahsulotlar', icon: '🍽️' },
-    { value: 'Appetizers', label: 'Mezalar', icon: '🥗' },
-    { value: 'Main Courses', label: 'Asosiy taomlar', icon: '🍖' },
-    { value: 'Desserts', label: 'Shirinliklar', icon: '🍰' },
-    { value: 'Beverages', label: 'Ichimliklar', icon: '🥤' },
-    { value: 'Pizza', label: 'Pitsa', icon: '🍕' },
-    { value: 'Pasta', label: 'Makaron', icon: '🍝' },
-    { value: 'Salads', label: 'Salatlar', icon: '🥬' },
-    { value: 'Seafood', label: 'Dengiz mahsulotlari', icon: '🐟' },
-    { value: 'Steaks', label: 'Steklar', icon: '🥩' },
-    { value: 'Soups', label: 'Shorvalar', icon: '🍲' },
-    { value: 'Grilled', label: 'Grill', icon: '🔥' },
-    { value: 'Vegan', label: 'Vegan', icon: '🌱' },
-    { value: 'Sushi', label: 'Sushi', icon: '🍣' },
-    { value: 'Sandwiches', label: 'Sendvichlar', icon: '🥪' },
-    { value: 'Breakfast', label: 'Nonushta', icon: '🍳' },
-    { value: 'Kids', label: 'Bolalar uchun', icon: '👶' },
-    { value: 'Specials', label: 'Maxsus taomlar', icon: '⭐' },
-    { value: 'Cocktails', label: 'Kokteyllar', icon: '🍸' },
-    { value: 'Smoothies', label: 'Smoothielar', icon: '🥤' }
+    { value: 'appetizers', label: 'Aperatiflar', icon: '🥗' },
+    { value: 'main_courses', label: 'Asosiy taomlar', icon: '🍖' },
+    { value: 'desserts', label: 'Shirinliklar', icon: '🍰' },
+    { value: 'beverages', label: 'Ichimliklar', icon: '🥤' },
+    { value: 'pizza', label: 'Pitsa', icon: '🍕' },
+    { value: 'pasta', label: 'Makaron', icon: '🍝' },
+    { value: 'salads', label: 'Salatlar', icon: '🥬' },
+    { value: 'seafood', label: 'Dengiz mahsulotlari', icon: '🐟' },
+    { value: 'steaks', label: 'Steklar', icon: '🥩' },
+    { value: 'soups', label: 'Shorvalar', icon: '🍲' },
+    { value: 'grilled', label: 'Grill', icon: '🔥' },
+    { value: 'vegan', label: 'Vegan', icon: '🌱' },
+    { value: 'sushi', label: 'Sushi', icon: '🍣' },
+    { value: 'sandwiches', label: 'Sendvichlar', icon: '🥪' },
+    { value: 'breakfast', label: 'Nonushta', icon: '🍳' },
+    { value: 'kids', label: 'Bolalar uchun', icon: '👶' },
+    { value: 'specials', label: 'Maxsus taomlar', icon: '⭐' },
+    { value: 'cocktails', label: 'Kokteyllar', icon: '🍸' },
+    { value: 'smoothies', label: 'Smoothielar', icon: '🥤' }
   ];
 
   const ratingOptions = [
@@ -156,7 +183,7 @@ const AdminProducts: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch('/products');
+      const data = await apiFetch('/products?limit=1000');
       // Handle paginated response structure
       const productsData = data.data?.docs || data.data || [];
       setProducts(productsData);
@@ -329,7 +356,7 @@ const AdminProducts: React.FC = () => {
       descriptionKey: product.descriptionKey,
       price: product.price.toString(),
       image: imageUrl, // To'g'ri URL ni o'rnatamiz
-      category: product.category,
+      category: normalizeCategory(product.category),
       rating: product.rating,
       quantity: product.quantity ? product.quantity.toString() : '',
       isAvailable: product.isAvailable
@@ -344,7 +371,8 @@ const AdminProducts: React.FC = () => {
   }, [resetForm]);
 
   const getCategoryLabel = useCallback((categoryKey: string) => {
-    const category = categories.find(cat => cat.value === categoryKey);
+    const normalizedCategory = normalizeCategory(categoryKey);
+    const category = categories.find(cat => cat.value === normalizedCategory);
     return category ? category.label : categoryKey;
   }, [categories]);
 
@@ -361,7 +389,8 @@ const AdminProducts: React.FC = () => {
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       // Category filter
-      if (selectedCategory !== 'all' && product.category !== selectedCategory) {
+      const normalizedProductCategory = normalizeCategory(product.category);
+      if (selectedCategory !== 'all' && normalizedProductCategory !== selectedCategory) {
         return false;
       }
       

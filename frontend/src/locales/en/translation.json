@@ -943,5 +943,10 @@
   "contact_my_message": "Your message",
   "contact_admin_reply": "Admin reply",
   "contact_admin_reply_toast_title": "Admin replied",
-  "contact_admin_reply_toast_description": "Your message has been replied to"
+  "contact_admin_reply_toast_description": "Your message has been replied to",
+  "menu_showing": "Showing",
+  "menu_of": "of",
+  "menu_items": "items",
+  "menu_mobile_items_info": "Showing 20 items per page on mobile view",
+  "menu_desktop_items_info": "Showing 20 items per page on desktop view"
 } 

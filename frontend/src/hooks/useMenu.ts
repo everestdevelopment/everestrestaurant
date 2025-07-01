@@ -26,19 +26,60 @@ export const useMenu = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const itemsPerPage = 30;
+  
+  // Responsive items per page
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const itemsPerPage = 20; // Mobile ko'rinishda 20 ta mahsulot
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const { t } = useTranslation();
 
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Helper function to normalize category names
+  const normalizeCategory = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'Appetizers': 'appetizers',
+      'Main Courses': 'main_courses',
+      'Desserts': 'desserts',
+      'Beverages': 'beverages',
+      'Pizza': 'pizza',
+      'Pasta': 'pasta',
+      'Salads': 'salads',
+      'Seafood': 'seafood',
+      'Steaks': 'steaks',
+      'Soups': 'soups',
+      'Grilled': 'grilled',
+      'Vegan': 'vegan',
+      'Sushi': 'sushi',
+      'Sandwiches': 'sandwiches',
+      'Breakfast': 'breakfast',
+      'Kids': 'kids',
+      'Specials': 'specials',
+      'Cocktails': 'cocktails',
+      'Smoothies': 'smoothies'
+    };
+    
+    return categoryMap[category] || category;
+  };
+
   // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await apiFetch('/products');
+        const response = await apiFetch('/products?limit=1000');
         // Handle paginated response structure
         const products = response.data?.docs || response.data || [];
         setMenuItems(products);
@@ -77,7 +118,8 @@ export const useMenu = () => {
   // Filter items based on active category, search query, and price range
   const filteredItems = menuItems.filter(item => {
     // Kategoriya filtri - backend dan kelgan category fieldi bilan solishtirish
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    const normalizedItemCategory = normalizeCategory(item.category);
+    const matchesCategory = activeCategory === 'all' || normalizedItemCategory === activeCategory;
     
     // Qidiruv filtri - mahsulot nomi va tavsifida qidirish
     const itemName = item.nameKey ? t(item.nameKey) : item.name;
@@ -136,6 +178,7 @@ export const useMenu = () => {
     currentPage,
     totalPages,
     currentItems,
+    itemsPerPage,
     isItemLiked,
     getCartQuantity,
     loading,

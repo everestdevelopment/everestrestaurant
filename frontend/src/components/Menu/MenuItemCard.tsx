@@ -25,32 +25,60 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
   const productName = product.nameKey ? t(product.nameKey) : product.name;
   const productDescription = product.descriptionKey ? t(product.descriptionKey) : product.description;
 
-  // Kategoriya nomini olish
-  const getCategoryName = (categoryKey: string) => {
-    const categoryTranslations: { [key: string]: string } = {
-      'all': 'Barcha mahsulotlar',
-      'Appetizers': 'Mezalar',
-      'Main Courses': 'Asosiy taomlar',
-      'Desserts': 'Shirinliklar',
-      'Beverages': 'Ichimliklar',
-      'Pizza': 'Pitsa',
-      'Pasta': 'Makaron',
-      'Salads': 'Salatlar',
-      'Seafood': 'Dengiz mahsulotlari',
-      'Steaks': 'Steklar',
-      'Soups': 'Shorvalar',
-      'Grilled': 'Grill',
-      'Vegan': 'Vegan',
-      'Sushi': 'Sushi',
-      'Sandwiches': 'Sendvichlar',
-      'Breakfast': 'Nonushta',
-      'Kids': 'Bolalar uchun',
-      'Specials': 'Maxsus taomlar',
-      'Cocktails': 'Kokteyllar',
-      'Smoothies': 'Smoothielar'
+  // Helper function to normalize category names
+  const normalizeCategory = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'Appetizers': 'appetizers',
+      'Main Courses': 'main_courses',
+      'Desserts': 'desserts',
+      'Beverages': 'beverages',
+      'Pizza': 'pizza',
+      'Pasta': 'pasta',
+      'Salads': 'salads',
+      'Seafood': 'seafood',
+      'Steaks': 'steaks',
+      'Soups': 'soups',
+      'Grilled': 'grilled',
+      'Vegan': 'vegan',
+      'Sushi': 'sushi',
+      'Sandwiches': 'sandwiches',
+      'Breakfast': 'breakfast',
+      'Kids': 'kids',
+      'Specials': 'specials',
+      'Cocktails': 'cocktails',
+      'Smoothies': 'smoothies'
     };
     
-    return categoryTranslations[categoryKey] || categoryKey;
+    return categoryMap[category] || category;
+  };
+
+  // Kategoriya nomini olish
+  const getCategoryName = (categoryKey: string) => {
+    const normalizedCategory = normalizeCategory(categoryKey);
+    const categoryTranslations: { [key: string]: string } = {
+      'all': 'Barcha mahsulotlar',
+      'appetizers': 'Aperatiflar',
+      'main_courses': 'Asosiy taomlar',
+      'desserts': 'Shirinliklar',
+      'beverages': 'Ichimliklar',
+      'pizza': 'Pitsa',
+      'pasta': 'Makaron',
+      'salads': 'Salatlar',
+      'seafood': 'Dengiz mahsulotlari',
+      'steaks': 'Steklar',
+      'soups': 'Shorvalar',
+      'grilled': 'Grill',
+      'vegan': 'Vegan',
+      'sushi': 'Sushi',
+      'sandwiches': 'Sendvichlar',
+      'breakfast': 'Nonushta',
+      'kids': 'Bolalar uchun',
+      'specials': 'Maxsus taomlar',
+      'cocktails': 'Kokteyllar',
+      'smoothies': 'Smoothielar'
+    };
+    
+    return categoryTranslations[normalizedCategory] || categoryKey;
   };
 
   const handleAddToCart = () => {
@@ -85,16 +113,16 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         <img 
           src={getImageUrl(product.image)} 
           alt={productName} 
-          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
+          className="w-full h-32 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-110"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
             e.currentTarget.nextElementSibling?.classList.remove('hidden');
           }}
         />
-        <div className="hidden w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <div className="hidden w-full h-32 sm:h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <div className="text-center">
-            <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">Rasm yuklanmadi</p>
+            <ImageIcon className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2" />
+            <p className="text-xs sm:text-sm text-gray-500">Rasm yuklanmadi</p>
           </div>
         </div>
         
@@ -102,14 +130,14 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         <Button
           size="icon"
           variant="ghost"
-          className={`absolute top-2 right-2 rounded-full h-10 w-10 bg-white/20 backdrop-blur-sm hover:bg-white/40 ${isLiked ? 'text-red-500' : 'text-white'}`}
+          className={`absolute top-1 right-1 sm:top-2 sm:right-2 rounded-full h-8 w-8 sm:h-10 sm:w-10 bg-white/20 backdrop-blur-sm hover:bg-white/40 ${isLiked ? 'text-red-500' : 'text-white'}`}
           onClick={() => onToggleLike(product)}
         >
-          <Heart fill={isLiked ? 'currentColor' : 'none'} className="w-5 h-5" />
+          <Heart fill={isLiked ? 'currentColor' : 'none'} className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
         
         {/* Kategoriya badge */}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-1 left-1 sm:top-2 sm:left-2">
           <Badge variant="secondary" className="bg-white/90 dark:bg-slate-800/90 text-slate-700 dark:text-white text-xs font-medium">
             {getCategoryName(product.category)}
           </Badge>
@@ -118,8 +146,8 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         {/* Availability overlay */}
         {!product.isAvailable && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Badge variant="destructive" className="text-lg font-semibold">
-              <EyeOff className="w-4 h-4 mr-1" />
+            <Badge variant="destructive" className="text-sm sm:text-lg font-semibold">
+              <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Mavjud emas
             </Badge>
           </div>
@@ -127,7 +155,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         
         {/* Quantity indicator */}
         {product.quantity > 0 && product.quantity <= 5 && (
-          <div className="absolute bottom-2 right-2">
+          <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2">
             <Badge variant="secondary" className="bg-orange-500 text-white text-xs">
               <Package className="w-3 h-3 mr-1" />
               {product.quantity} dona qoldi
@@ -136,24 +164,24 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         )}
       </div>
       
-      <CardContent className="p-4 flex-grow flex flex-col">
+      <CardContent className="p-3 sm:p-4 flex-grow flex flex-col">
         <div className="flex-grow">
           <Link to={`/menu/${product._id}`}>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-1">{productName}</h3>
+            <h3 className="text-sm sm:text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-1">{productName}</h3>
           </Link>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mb-4 h-10 line-clamp-2">{productDescription}</p>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mb-3 sm:mb-4 h-8 sm:h-10 line-clamp-2">{productDescription}</p>
         </div>
         
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between items-center mt-3 sm:mt-4">
           <div className="flex items-center gap-1">
-            <Star className="w-5 h-5 text-yellow-400" fill="currentColor" />
-            <span className="font-bold text-slate-700 dark:text-white">{product.rating.toFixed(1)}</span>
+            <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" fill="currentColor" />
+            <span className="font-bold text-slate-700 dark:text-white text-sm sm:text-base">{product.rating.toFixed(1)}</span>
           </div>
-          <span className="text-xl font-bold text-slate-800 dark:text-yellow-400">{formatCurrency(product.price)}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-800 dark:text-yellow-400">{formatCurrency(product.price)}</span>
         </div>
         
         {/* Availability status */}
-        <div className="flex items-center justify-between mt-2 mb-4">
+        <div className="flex items-center justify-between mt-2 mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
             {product.isAvailable ? (
               <Badge variant="default" className="bg-green-500 text-white text-xs">
@@ -175,7 +203,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         </div>
         
         <Button 
-          className={`w-full mt-4 font-semibold ${
+          className={`w-full mt-3 sm:mt-4 font-semibold text-sm sm:text-base ${
             !product.isAvailable || (product.quantity !== undefined && product.quantity <= 0)
               ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
               : 'bg-slate-800 text-white dark:bg-gradient-to-r dark:from-cyan-400 dark:to-purple-500 dark:text-slate-900 hover:bg-slate-700 dark:hover:from-cyan-500 dark:hover:to-purple-600'
@@ -191,7 +219,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         </Button>
         
         {extraBottomContent && (
-          <div className="mt-4">{extraBottomContent}</div>
+          <div className="mt-3 sm:mt-4">{extraBottomContent}</div>
         )}
       </CardContent>
     </Card>

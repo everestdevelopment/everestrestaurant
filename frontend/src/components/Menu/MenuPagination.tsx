@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Pagination, 
@@ -24,7 +23,12 @@ const MenuPagination: React.FC<MenuPaginationProps> = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-8 sm:mt-12 flex justify-center">
+    <div className="mt-8 sm:mt-12 flex flex-col items-center gap-4">
+      <div className="text-center">
+        <p className="text-sm text-slate-500 dark:text-gray-400">
+          Sahifa {currentPage} dan {totalPages} gacha
+        </p>
+      </div>
       <Pagination>
         <PaginationContent className="glass-card p-1 sm:p-2">
           <PaginationItem>
