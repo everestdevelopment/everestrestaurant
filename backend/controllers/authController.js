@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import asyncHandler from '../utils/asyncHandler.js';
 import { io, activeAdmins, pendingLogins } from '../server.js';
 import { v4 as uuidv4 } from 'uuid';
+import passport from 'passport';
+import nodemailer from 'nodemailer';
 
 export const signup = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -348,5 +350,185 @@ export const getAdminDashboardStats = asyncHandler(async (req, res) => {
         payments: monthlyPayments[i]
       }))
     }
+  });
+});
+
+// Google OAuth callback
+export const googleCallback = (req, res, next) => {
+  passport.authenticate('google', async (err, user, info) => {
+    if (err || !user) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
+    }
+    
+    // If user exists in DB and is verified, proceed normally
+    if (user._id && user.isEmailVerified) {
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+      return res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
+    }
+    
+    // If user doesn't exist in DB or is not verified, redirect to verification
+    // Pass temporary user data through query params
+    const tempUserData = {
+      name: user.name,
+      email: user.email,
+      googleId: user.googleId,
+      verificationCode: user.emailVerificationCode
+    };
+    
+    return res.redirect(`${process.env.FRONTEND_URL}/verify?tempData=${encodeURIComponent(JSON.stringify(tempUserData))}`);
+  })(req, res, next);
+};
+
+// Google email verification
+export const verifyGoogleEmail = async (req, res) => {
+  const { email, code, tempUserData } = req.body;
+  
+  // If tempUserData is provided, use it (new user flow)
+  if (tempUserData) {
+    const userData = JSON.parse(tempUserData);
+    
+    // Verify the code matches
+    if (userData.verificationCode !== code) {
+      return res.status(400).json({ message: 'Invalid verification code.' });
+    }
+    
+    // Return success without creating user in DB yet
+    res.json({ 
+      verified: true, 
+      email: userData.email,
+      name: userData.name,
+      googleId: userData.googleId,
+      message: 'Code verified. Please set your password.' 
+    });
+    return;
+  }
+  
+  // Check if user exists in database (existing user flow)
+  let user = await User.findOne({ email });
+  
+  if (user) {
+    // User exists, verify code
+    if (user.emailVerificationCode !== code) {
+      return res.status(400).json({ message: 'Invalid verification code.' });
+    }
+    user.isEmailVerified = true;
+    user.emailVerificationCode = undefined;
+    await user.save();
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { _id: user._id, name: user.name, email: user.email, role: user.role } });
+  } else {
+    return res.status(400).json({ message: 'User not found.' });
+  }
+};
+
+export const setPassword = asyncHandler(async (req, res) => {
+  const { email, password, name, googleId } = req.body;
+
+  // Parol bo'lmasa yoki 6 belgidan kam bo'lsa, user yaratmaslik
+  if (!password || password.length < 6) {
+    return res.status(400).json({ message: 'Password is required and must be at least 6 characters.' });
+  }
+
+  // Check if user already exists
+  let user = await User.findOne({ email });
+
+  if (user) {
+    // User exists, check if eligible to set password
+    if (!user.isGoogleAccount || !user.isEmailVerified) {
+      return res.status(400).json({ message: 'User not eligible to set password.' });
+    }
+    if (user.password && user.password.length > 0) {
+      return res.status(400).json({ message: 'Password already set.' });
+    }
+    // Update existing user with password
+    user.password = password;
+    await user.save();
+  } else {
+    // Create new user with password (first time setup)
+    user = await User.create({
+      name: name || 'User',
+      email,
+      password,
+      googleId: googleId,
+      isGoogleAccount: true,
+      isEmailVerified: true,
+      role: 'user',
+    });
+  }
+
+  // Generate token after user is created/saved
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+  res.json({ 
+    message: 'Password set successfully.',
+    token,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
+  });
+});
+
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { name, phone } = req.body;
+  const userId = req.user._id;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  // Update fields
+  if (name) user.name = name;
+  if (phone) user.phone = phone;
+
+  await user.save();
+
+  res.json({
+    success: true,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+    },
+    message: 'Profile updated successfully'
+  });
+});
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user._id;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  // Check if user has password (Google users might not have password initially)
+  if (!user.password) {
+    res.status(400);
+    throw new Error('No password set for this account');
+  }
+
+  // Verify current password
+  const isMatch = await user.matchPassword(currentPassword);
+  if (!isMatch) {
+    res.status(400);
+    throw new Error('Current password is incorrect');
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Password changed successfully'
   });
 });

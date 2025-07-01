@@ -20,6 +20,9 @@ import userAdminRoutes from './routes/userAdminRoutes.js';
 import adminNotificationRoutes from './routes/adminNotificationRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { setIO } from './utils/socketEmitter.js';
+import session from 'express-session';
+import passport from 'passport';
+import './config/passport.js';
 
 dotenv.config();
 
@@ -52,6 +55,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Serve static files (uploaded images)
 app.use('/uploads', express.static('uploads'));

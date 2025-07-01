@@ -6,9 +6,11 @@ import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { ShoppingProvider } from "./context/ShoppingContext";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminNotificationProvider } from "./context/AdminNotificationContext";
-import Chatbot from "./components/Chatbot/Chatbot";
 import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import BottomNavBar from './components/Layout/BottomNavBar';
+import { BrowserRouter } from 'react-router-dom';
+import MobileTopNavbar from './components/Layout/MobileTopNavbar';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,8 +31,11 @@ function App() {
             <AuthProvider>
               <AdminNotificationProvider>
                 <ShoppingProvider>
-                  <AppRouter />
-                  <Chatbot />
+                  <BrowserRouter>
+                    <MobileTopNavbar />
+                    <AppRouter />
+                    <BottomNavBar />
+                  </BrowserRouter>
                 </ShoppingProvider>
               </AdminNotificationProvider>
             </AuthProvider>

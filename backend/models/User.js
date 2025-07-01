@@ -5,9 +5,14 @@ import paginate from 'mongoose-paginate-v2';
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String },
+  phone: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  googleId: { type: String },
+  isGoogleAccount: { type: Boolean, default: false },
+  isEmailVerified: { type: Boolean, default: false },
+  emailVerificationCode: { type: String },
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
