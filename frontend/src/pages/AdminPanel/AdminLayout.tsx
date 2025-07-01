@@ -290,6 +290,17 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 admin-layout">
       {/* Main Navbar */}
       <Navbar />
+      {/* Mobile menu button - below navbar */}
+      <div className="md:hidden flex justify-end w-full mt-2 px-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg w-10 h-10 flex items-center justify-center"
+        >
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </Button>
+      </div>
 
       {/* Admin Sidebar */}
       <aside className={cn(
@@ -458,18 +469,6 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="md:ml-64 pt-20 admin-content">
-        {/* Mobile menu button */}
-        <div className="md:hidden fixed top-24 left-4 z-50">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg w-10 h-10"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
-        
         <main className="min-h-[calc(100vh-5rem)] md:pt-0 pt-20">
           <Outlet />
         </main>

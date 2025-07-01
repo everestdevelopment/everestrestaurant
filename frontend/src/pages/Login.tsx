@@ -15,14 +15,6 @@ import { useTranslation } from 'react-i18next';
 import Loader from '../components/ui/Loader';
 import { io, Socket } from "socket.io-client";
 
-const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
-  rememberMe: z.boolean().optional(),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
 const Login = () => {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +22,12 @@ const Login = () => {
   const location = useLocation();
   const { login, manualLogin, user } = useAuth();
   
+  const formSchema = z.object({
+    email: z.string().email({ message: t('login_form_email_error') }),
+    password: z.string().min(1, { message: t('login_form_password_error') }),
+    rememberMe: z.boolean().optional(),
+  });
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -170,7 +168,6 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-                
                 <FormField
                   control={form.control}
                   name="password"
@@ -190,37 +187,16 @@ const Login = () => {
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-slate-700 dark:hover:text-white"
                             onClick={togglePasswordVisibility}
                           >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
                       </FormControl>
-                      <div className="flex justify-between items-center mt-2">
-                        <FormMessage />
-                        <Link to="/forgot-password" className="text-sm text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300">
-                          {t('login_form_forgot_password')}
-                        </Link>
-                      </div>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 hover:from-yellow-500 hover:to-amber-600 font-semibold"
-                  disabled={form.formState.isSubmitting || isLoading}
-                >
-                  {isLoading ? (
+                <Button type="submit" className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 hover:from-yellow-500 hover:to-amber-600 font-semibold" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? (
                     <div className="h-5 w-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto"></div>
                   ) : (
                     <>

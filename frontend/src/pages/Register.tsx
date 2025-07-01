@@ -87,6 +87,14 @@ const Register = () => {
           </div>
           
           <div className="bg-white dark:glass-card shadow-lg rounded-lg p-8 animate-fade-in">
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-2 mb-6 border border-slate-300 dark:border-slate-700 rounded px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+            >
+              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5" />
+              Google bilan ro'yxatdan o'tish
+            </button>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
