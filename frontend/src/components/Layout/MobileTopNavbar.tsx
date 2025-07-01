@@ -26,14 +26,14 @@ const MobileTopNavbar: React.FC = () => {
   return (
     <header className="md:hidden fixed top-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm h-16 flex items-center px-3 justify-between">
       {/* Left: Logo and Brand */}
-      <Link to="/" className="flex items-center gap-2">
-        <UtensilsCrossed className="w-8 h-8 text-yellow-400" />
+      <Link to="/" className="flex items-center gap-3">
+        <UtensilsCrossed className="w-8 h-8 text-yellow-400"/>
         <span className="text-xl font-display font-bold text-slate-800 dark:text-white gradient-text">{t('brand_name')}</span>
       </Link>
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
-        <ThemeToggle iconClassName={iconClass} />
-        <LanguageSwitcher iconClassName={iconClass} />
+        <ThemeToggle/>
+        <LanguageSwitcher/>
         <Link to="/liked" className={iconContainerClass + ' relative'}>
           <Heart className={iconClass} />
           {likedCount > 0 && <Badge className="absolute -top-1 -right-1 h-3 w-3 justify-center p-0 text-[10px]">{likedCount}</Badge>}

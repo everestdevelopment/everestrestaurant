@@ -441,8 +441,8 @@ const AdminPayments: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{payment.user.name}</div>
-                      <div className="text-sm text-gray-500">{payment.user.email}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{payment.user?.name || '-'}</div>
+                      <div className="text-sm text-gray-500">{payment.user?.email || '-'}</div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">

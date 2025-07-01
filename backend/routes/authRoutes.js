@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, login, me, logout, getUserCount, handleLoginApproval, getAllUsers, updateUserStatus, deleteUser, getUserStats, getAdminDashboardStats, googleCallback, verifyGoogleEmail, setPassword, updateProfile, changePassword, manualSignup, verifyEmailCode } from '../controllers/authController.js';
+import { signup, login, me, logout, getUserCount, handleLoginApproval, getAllUsers, updateUserStatus, deleteUser, getUserStats, getAdminDashboardStats, googleCallback, verifyGoogleEmail, setPassword, updateProfile, changePassword, manualSignup, verifyEmailCode, forgotPassword, verifyResetCode, resetPassword } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 import passport from 'passport';
 
@@ -36,5 +36,9 @@ router.put('/change-password', protect, changePassword);
 
 router.post('/signup/manual', manualSignup);
 router.post('/verify-email', verifyEmailCode);
+
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-reset-code', verifyResetCode);
+router.post('/reset-password', resetPassword);
 
 export default router;

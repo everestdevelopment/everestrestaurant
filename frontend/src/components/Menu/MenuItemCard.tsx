@@ -55,30 +55,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
   // Kategoriya nomini olish
   const getCategoryName = (categoryKey: string) => {
     const normalizedCategory = normalizeCategory(categoryKey);
-    const categoryTranslations: { [key: string]: string } = {
-      'all': 'Barcha mahsulotlar',
-      'appetizers': 'Aperatiflar',
-      'main_courses': 'Asosiy taomlar',
-      'desserts': 'Shirinliklar',
-      'beverages': 'Ichimliklar',
-      'pizza': 'Pitsa',
-      'pasta': 'Makaron',
-      'salads': 'Salatlar',
-      'seafood': 'Dengiz mahsulotlari',
-      'steaks': 'Steklar',
-      'soups': 'Shorvalar',
-      'grilled': 'Grill',
-      'vegan': 'Vegan',
-      'sushi': 'Sushi',
-      'sandwiches': 'Sendvichlar',
-      'breakfast': 'Nonushta',
-      'kids': 'Bolalar uchun',
-      'specials': 'Maxsus taomlar',
-      'cocktails': 'Kokteyllar',
-      'smoothies': 'Smoothielar'
-    };
-    
-    return categoryTranslations[normalizedCategory] || categoryKey;
+    return t('menu_category_' + normalizedCategory);
   };
 
   const handleAddToCart = () => {
@@ -148,7 +125,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <Badge variant="destructive" className="text-sm sm:text-lg font-semibold">
               <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              Mavjud emas
+              {t('product_unavailable')}
             </Badge>
           </div>
         )}
@@ -158,7 +135,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
           <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2">
             <Badge variant="secondary" className="bg-orange-500 text-white text-xs">
               <Package className="w-3 h-3 mr-1" />
-              {product.quantity} dona qoldi
+              {t('product_quantity_left', { count: product.quantity })}
             </Badge>
           </div>
         )}
@@ -186,18 +163,18 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
             {product.isAvailable ? (
               <Badge variant="default" className="bg-green-500 text-white text-xs">
                 <Eye className="w-3 h-3 mr-1" />
-                Mavjud
+                {t('product_available')}
               </Badge>
             ) : (
               <Badge variant="destructive" className="text-xs">
                 <EyeOff className="w-3 h-3 mr-1" />
-                Mavjud emas
+                {t('product_unavailable')}
               </Badge>
             )}
           </div>
           {product.quantity > 0 && (
             <div className="text-xs text-gray-500">
-              {product.quantity} dona
+              {t('product_quantity', { count: product.quantity })}
             </div>
           )}
         </div>
@@ -213,7 +190,7 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
           {!product.isAvailable || (product.quantity !== undefined && product.quantity <= 0)
-            ? 'Mavjud emas' 
+            ? t('product_unavailable')
             : t('menu_item_add_to_cart')
           }
         </Button>

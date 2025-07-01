@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import Loader from '../components/ui/Loader';
+import Loader from '@/components/ui/Loader';
+import { Loader2 } from 'lucide-react';
 
 const Login = () => {
   const { t } = useTranslation();
@@ -105,8 +106,13 @@ const Login = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              <div className="flex justify-end mb-2">
+                <Link to="/reset-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+                  {t('login_form_forgot_password')}
+                </Link>
+              </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? t('login_form_submitting_button') : t('login_form_submit_button')}
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('login_form_submit_button')}
               </Button>
             </form>
             <p className="mt-6 text-center text-gray-500">

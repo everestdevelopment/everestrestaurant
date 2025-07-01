@@ -286,12 +286,14 @@ const AdminLayout = () => {
     }
   };
 
+  const isHome = location.pathname === '/admin';
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 admin-layout">
       {/* Main Navbar */}
       <Navbar />
-      {/* Mobile menu button - below navbar */}
-      <div className="md:hidden flex justify-end w-full mt-2 px-2">
+      {/* Mobil hamburger tugmasi: Navbar pastida, o'ngda */}
+      <div className="md:hidden flex justify-end w-full mt-2 px-2 fixed top-16 right-0 z-50">
         <Button
           variant="ghost"
           size="icon"
@@ -409,20 +411,21 @@ const AdminLayout = () => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const notificationCount = dashboardNotifications[item.notificationKey as keyof DashboardNotifications];
+                const isActive = location.pathname === item.to;
                 return (
                   <li key={item.to} className="relative">
                     <Link
                       to={item.to}
                       className={cn(
                         "admin-nav-item transition-all duration-200 relative",
-                        location.pathname === item.to
+                        isActive
                           ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                          : "text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          : "text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-slate-100 dark:hover:bg-slate-700"
                       )}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <span className="relative">
-                        <Icon className="admin-nav-icon" />
+                        <Icon className={cn("admin-nav-icon", isActive && "text-yellow-500 dark:text-yellow-400")}/>
                         {notificationCount > 0 && (
                           <span className="admin-notification-badge">{notificationCount}</span>
                         )}
@@ -469,7 +472,13 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="md:ml-64 pt-20 admin-content">
-        <main className="min-h-[calc(100vh-5rem)] md:pt-0 pt-20">
+        <main
+          className={
+            `min-h-[calc(100vh-5rem)] md:pt-0 pt-20 ` +
+            (!isHome ? ' pb-[75px] pt-[100px] md:pt-0 md:pb-0' : '')
+          }
+          style={!isHome ? { paddingTop: 100, paddingBottom: 75 } : {}}
+        >
           <Outlet />
         </main>
       </div>

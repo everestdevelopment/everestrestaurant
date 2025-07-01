@@ -7,11 +7,14 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const Register = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { manualLogin } = useAuth();
 
   const [step, setStep] = useState<'form' | 'verify' | 'set-password'>('form');
   const [manualData, setManualData] = useState({ name: '', email: '', password: '' });
@@ -73,13 +76,16 @@ const Register = () => {
         body: JSON.stringify({ email: verifyEmail, code, isManual }),
       });
       const data = await res.json();
-      if (res.ok && data.verified) {
-        if (isManual) {
-          toast({ title: t('register_success_toast_title'), description: t('register_success_toast_description') });
-          navigate('/');
-        } else {
-          setStep('set-password');
+      if (res.ok && data.verified && isManual) {
+        localStorage.setItem('token', data.token);
+        if (data.user && data.token && manualLogin) {
+          manualLogin(data.user, data.token);
         }
+        toast({ title: t('register_success_toast_title'), description: t('register_success_toast_description') });
+        navigate('/');
+      } else if (res.ok && data.verified && !isManual) {
+        setGoogleUserData({ name: data.name, email: data.email, googleId: data.googleId });
+        setStep('set-password');
       } else {
         toast({ title: t('register_fail_toast_title'), description: data.message || t('register_fail_toast_description'), variant: 'destructive' });
       }
@@ -133,7 +139,9 @@ const Register = () => {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>{loading ? t('register_form_submitting_button') : t('register_form_submit_button')}</Button>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('register_form_submit_button')}
+                  </Button>
                 </form>
                 <div className="my-6 text-center text-gray-500">{t('register_or')}</div>
                 <Button type="button" className="w-full flex items-center justify-center gap-2" onClick={handleGoogleSignup}>
@@ -150,7 +158,9 @@ const Register = () => {
                     {t('verify_description')} <span className="font-semibold">{verifyEmail}</span>
                   </p>
                   <Input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder={t('verify_code_placeholder')} maxLength={6} className="text-center tracking-widest text-lg" required />
-                  <Button type="submit" className="w-full" disabled={loading}>{loading ? t('verify_verifying') : t('verify_button')}</Button>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('verify_button')}
+                  </Button>
                 </form>
               </>
             )}
@@ -162,7 +172,9 @@ const Register = () => {
                   <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setShowPassword(v => !v)}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
-                  <Button type="submit" className="w-full" disabled={loading}>{loading ? t('set_password_setting') : t('set_password_button')}</Button>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('set_password_button')}
+                  </Button>
                 </form>
               </>
             )}

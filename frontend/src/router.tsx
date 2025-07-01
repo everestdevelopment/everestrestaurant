@@ -27,6 +27,7 @@ const Liked = lazy(() => import('./pages/Liked'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
 const Verify = lazy(() => import('./pages/Verify'));
 const SetPassword = lazy(() => import('./pages/SetPassword'));
+const PasswordReset = lazy(() => import('./pages/PasswordReset'));
 
 // Lazy load admin pages
 // const Overview = lazy(() => import('./pages/Admin/Overview'));
@@ -81,11 +82,11 @@ const ProtectedRoute = () => {
     return <LoadingFallback />;
   }
   
-  if (user && (!('password' in user) || !user.password || user.password.length === 0)) {
+  if (!user || !user.password || user.password.length === 0) {
     return <Navigate to='/' replace />;
   }
   
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  return <Outlet />;
 };
 
 const AdminRoute = () => {
@@ -270,6 +271,7 @@ const AppRouter = () => {
 
       <Route path="/verify" element={<Verify />} />
       <Route path="/set-password" element={<SetPassword />} />
+      <Route path="/reset-password" element={<PasswordReset />} />
     </Routes>
   );
 };
