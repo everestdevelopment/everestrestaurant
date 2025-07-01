@@ -5,10 +5,13 @@ import { io, activeAdmins, pendingLogins } from '../server.js';
 import { v4 as uuidv4 } from 'uuid';
 import passport from 'passport';
 import nodemailer from 'nodemailer';
-import { google } from 'googleapis'; // For future Google API checks if needed
 
-// In-memory storage for pending manual signups
+// In-memory storage for pending signups
 const pendingManualSignups = new Map();
+const pendingGoogleSignups = new Map();
+
+// In-memory storage for password reset codes
+const pendingPasswordResets = new Map();
 
 export const signup = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -181,7 +184,9 @@ export const handleLoginApproval = asyncHandler(async (req, res) => {
 
 export const me = asyncHandler(async (req, res) => {
   if (req.user) {
-    res.json(req.user);
+    // Always return user with password field for frontend protected route logic
+    const user = await User.findById(req.user._id);
+    res.json(user);
   } else {
     res.status(404);
     throw new Error('User not found');
@@ -357,19 +362,17 @@ export const getAdminDashboardStats = asyncHandler(async (req, res) => {
   });
 });
 
-// Google OAuth callback
+// Google OAuth callback (update to store pendingGoogleSignups)
 export const googleCallback = (req, res, next) => {
   passport.authenticate('google', async (err, user, info) => {
     if (err || !user) {
       return res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
     }
-    
     // If user exists in DB and is verified, proceed normally
     if (user._id && user.isEmailVerified) {
       const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
       return res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
     }
-    
     // If user doesn't exist in DB or is not verified, redirect to verification
     // Pass temporary user data through query params
     const tempUserData = {
@@ -378,7 +381,15 @@ export const googleCallback = (req, res, next) => {
       googleId: user.googleId,
       verificationCode: user.emailVerificationCode
     };
-    
+    // Store in pendingGoogleSignups
+    const code = user.emailVerificationCode;
+    pendingGoogleSignups.set(user.email, {
+      name: user.name,
+      email: user.email,
+      googleId: user.googleId,
+      code,
+      createdAt: Date.now()
+    });
     return res.redirect(`${process.env.FRONTEND_URL}/verify?tempData=${encodeURIComponent(JSON.stringify(tempUserData))}`);
   })(req, res, next);
 };
@@ -428,42 +439,29 @@ export const verifyGoogleEmail = async (req, res) => {
 export const setPassword = asyncHandler(async (req, res) => {
   const { email, password, name, googleId } = req.body;
 
-  // Parol bo'lmasa yoki 6 belgidan kam bo'lsa, user yaratmaslik
   if (!password || password.length < 6) {
     return res.status(400).json({ message: 'Password is required and must be at least 6 characters.' });
   }
 
-  // Check if user already exists
   let user = await User.findOne({ email });
 
   if (user) {
-    // User exists, check if eligible to set password
-    if (!user.isGoogleAccount || !user.isEmailVerified) {
-      return res.status(400).json({ message: 'User not eligible to set password.' });
-    }
-    if (user.password && user.password.length > 0) {
-      return res.status(400).json({ message: 'Password already set.' });
-    }
-    // Update existing user with password
-    user.password = password;
-    await user.save();
-  } else {
-    // Create new user with password (first time setup)
-    user = await User.create({
-      name: name || 'User',
-      email,
-      password,
-      googleId: googleId,
-      isGoogleAccount: true,
-      isEmailVerified: true,
-      role: 'user',
-    });
+    return res.status(400).json({ message: 'User already exists.' });
   }
 
-  // Generate token after user is created/saved
+  user = await User.create({
+    name: name || 'User',
+    email,
+    password,
+    googleId,
+    isGoogleAccount: true,
+    isEmailVerified: true,
+    role: 'user',
+  });
+
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
-  res.json({ 
+  res.json({
     message: 'Password set successfully.',
     token,
     user: {
@@ -539,16 +537,100 @@ export const changePassword = asyncHandler(async (req, res) => {
 
 export const manualSignup = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
+  const emailKey = email.toLowerCase();
 
-  // 1. Check if email is a Google account (for demo, just check @gmail.com)
-  if (!email.endsWith('@gmail.com')) {
+  if (!emailKey.endsWith('@gmail.com')) {
     return res.status(400).json({ message: 'Email must be a Google account.' });
   }
 
-  // 2. Generate verification code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // 3. Send code to email
+  // Send code to email
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  await transporter.sendMail({
+    from: process.env.SMTP_USER,
+    to: emailKey,
+    subject: 'Your Everest Restaurant Verification Code',
+    text: `Your verification code is: ${code}`,
+  });
+
+  pendingManualSignups.set(emailKey, { name, email: emailKey, password, code, createdAt: Date.now() });
+
+  res.json({ message: 'Verification code sent to your email.' });
+});
+
+export const verifyEmailCode = asyncHandler(async (req, res) => {
+  const { email, code, isManual } = req.body;
+  const emailKey = email.toLowerCase();
+
+  if (isManual) {
+    console.log('Manual verify:', emailKey, code);
+    const pending = pendingManualSignups.get(emailKey);
+    console.log('Pending manual:', pending);
+    if (!pending || pending.code !== code) {
+      console.log('Invalid or expired code');
+      return res.status(400).json({ message: 'Invalid or expired code.' });
+    }
+    // User DB-ga saqlanadi
+    let user = await User.findOne({ email: emailKey });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists.' });
+    }
+    user = await User.create({
+      name: pending.name,
+      email: pending.email,
+      password: pending.password,
+      isEmailVerified: true,
+      role: 'user',
+    });
+    pendingManualSignups.delete(emailKey);
+
+    // JWT token
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+    return res.json({
+      verified: true,
+      manual: true,
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
+    });
+  } else {
+    // Google signup flow
+    const pending = pendingGoogleSignups.get(email);
+    if (!pending || pending.code !== code) {
+      return res.status(400).json({ message: 'Invalid or expired code.' });
+    }
+    pendingGoogleSignups.delete(email);
+    // Parol o'rnatish paneliga o'tish uchun user ma'lumotlarini qaytar
+    return res.json({
+      verified: true,
+      manual: false,
+      name: pending.name,
+      email: pending.email,
+      googleId: pending.googleId
+    });
+  }
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // Email yuborish
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -559,33 +641,34 @@ export const manualSignup = asyncHandler(async (req, res) => {
   await transporter.sendMail({
     from: process.env.SMTP_USER,
     to: email,
-    subject: 'Your Everest Restaurant Verification Code',
-    text: `Your verification code is: ${code}`,
+    subject: 'Your Everest Restaurant Password Reset Code',
+    text: `Your password reset code is: ${code}\n\nPlease do not share this code with anyone. By using our service, you agree to abide by the rules and terms of Everest Restaurant. If you did not request this, please ignore this email.`,
   });
-
-  // 4. Store pending signup in memory
-  pendingManualSignups.set(email, { name, email, password, code, createdAt: Date.now() });
-
-  res.json({ message: 'Verification code sent to your email.' });
+  pendingPasswordResets.set(email.toLowerCase(), { code, createdAt: Date.now() });
+  res.json({ message: 'Reset code sent to your email.' });
 });
 
-export const verifyEmailCode = asyncHandler(async (req, res) => {
-  const { email, code, isManual } = req.body;
-
-  if (isManual) {
-    // Manual signup flow
-    const pending = pendingManualSignups.get(email);
-    if (!pending || pending.code !== code) {
-      return res.status(400).json({ message: 'Invalid or expired code.' });
-    }
-    // Remove from pending
-    pendingManualSignups.delete(email);
-    // Do not create user in DB, just allow frontend to redirect to home
-    return res.json({ verified: true, manual: true });
-  } else {
-    // Google signup flow: handled by your existing Google OAuth logic
-    // (You may want to check a similar in-memory or session store for Google signups)
-    // For now, just return error if not implemented
-    return res.status(400).json({ message: 'Google signup verification not implemented here.' });
+export const verifyResetCode = asyncHandler(async (req, res) => {
+  const { email, code } = req.body;
+  const pending = pendingPasswordResets.get(email.toLowerCase());
+  if (!pending || pending.code !== code) {
+    return res.status(400).json({ message: 'Invalid or expired code.' });
   }
+  res.json({ verified: true });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  const pending = pendingPasswordResets.get(email.toLowerCase());
+  if (!pending || pending.code !== code) {
+    return res.status(400).json({ message: 'Invalid or expired code.' });
+  }
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  user.password = newPassword;
+  await user.save();
+  pendingPasswordResets.delete(email.toLowerCase());
+  res.json({ message: 'Password reset successfully.' });
 });

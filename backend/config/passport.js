@@ -23,8 +23,9 @@ passport.use(new GoogleStrategy({
   callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/google/callback`,
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    console.log('Google profile:', profile);
     // Check if user already exists
-    let user = await User.findOne({ email: profile.emails[0].value });
+    let user = await User.findOne({ email: profile.emails && profile.emails[0] && profile.emails[0].value });
     
     if (user) {
       // User exists, check if verified
@@ -35,7 +36,7 @@ passport.use(new GoogleStrategy({
         await user.save();
         
         // Send verification code
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             user: process.env.SMTP_USER,
@@ -56,7 +57,7 @@ passport.use(new GoogleStrategy({
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Send verification code first
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,
@@ -65,7 +66,7 @@ passport.use(new GoogleStrategy({
     });
     await transporter.sendMail({
       from: process.env.SMTP_USER,
-      to: profile.emails[0].value,
+      to: profile.emails && profile.emails[0] && profile.emails[0].value,
       subject: 'Your Everest Restaurant Verification Code',
       text: `Your verification code is: ${code}`,
     });
@@ -73,7 +74,7 @@ passport.use(new GoogleStrategy({
     // Create temporary user object (not saved to DB)
     const tempUser = {
       name: profile.displayName,
-      email: profile.emails[0].value,
+      email: profile.emails && profile.emails[0] && profile.emails[0].value,
       googleId: profile.id,
       isGoogleAccount: true,
       isEmailVerified: false,
@@ -84,6 +85,7 @@ passport.use(new GoogleStrategy({
     // Store temporary user data in session or pass it through
     done(null, tempUser);
   } catch (err) {
+    console.error('GoogleStrategy error:', err);
     done(err, null);
   }
 })); 

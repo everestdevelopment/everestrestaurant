@@ -5,6 +5,7 @@ interface User {
   name: string;
   email: string;
   role?: string;
+  password?: string;
 }
 
 interface AuthContextType {
@@ -29,29 +30,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) {
+        setUser(null);
         setLoading(false);
         return;
       }
-
+      setLoading(true);
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
         if (res.ok) {
           const userData = await res.json();
           setUser(userData);
           setError(null);
         } else {
-          // Token is invalid, clear it
           localStorage.removeItem('token');
           setUser(null);
           setToken(null);
           setError(null);
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
-        // Network error or other issues, clear token as fallback
         localStorage.removeItem('token');
         setUser(null);
         setToken(null);
@@ -60,33 +58,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     };
-
     fetchUser();
   }, [token]);
 
   const login = async (email: string, password: string, isAdminLogin = false) => {
     setError(null);
     const url = `${import.meta.env.VITE_API_URL}/auth/login`;
-    
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
-      
       if (data.token) {
         localStorage.setItem('token', data.token);
         setToken(data.token);
         setUser(data.user);
         setError(null);
       }
-
       return data;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
@@ -104,19 +97,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (name: string, email: string, password: string) => {
     setError(null);
-    
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-      
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || 'Signup failed');
       }
-      
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setUser(data.user);
@@ -131,7 +121,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     setError(null);
-    
     if (token) {
       try {
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
@@ -139,11 +128,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
       } catch (error) {
-        console.error("Logout failed on server:", error);
-        // Don't throw error for logout, just log it
+        // Ignore
       }
     }
-    
     localStorage.removeItem('token');
     setUser(null);
     setToken(null);

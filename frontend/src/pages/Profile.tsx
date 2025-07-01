@@ -290,7 +290,6 @@ const Profile: React.FC = () => {
         </div>
       </div>
       
-      <Footer />
     </div>
   );
 };
