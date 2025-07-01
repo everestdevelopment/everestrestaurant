@@ -1,1 +1,3 @@
-.env
+# .gitignore
+backend/.env
+backend/client_secret.json
