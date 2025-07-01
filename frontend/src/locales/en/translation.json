@@ -200,9 +200,11 @@
   "register_fail_toast_title": "Registration failed",
   "register_fail_toast_description": "Please try again.",
 
-  "register_description": "Join us for an amazing dining experience.",
-  "register_has_account": "Already have an account?",
-  "register_sign_in": "Sign In",
+  "register_description": "Create your account to enjoy all features.",
+  "register_or": "or",
+  "register_with_google": "Sign up with Google",
+  "register_already_have_account": "Already have an account?",
+  "register_login_link": "Sign in",
 
   "admin_dashboard_title": "Admin Dashboard",
   "admin_dashboard_total_orders": "Total Orders",
@@ -1012,5 +1014,8 @@
   "password_success_title": "Success",
   "password_success_description": "Password changed successfully",
   "password_error_description": "Failed to change password",
-  "password_network_error": "Network error"
+  "password_network_error": "Network error",
+
+  "register_code_sent_title": "Verification code sent!",
+  "register_code_sent_desc": "Please check your email and enter the code."
 } 
