@@ -5,6 +5,10 @@ import { io, activeAdmins, pendingLogins } from '../server.js';
 import { v4 as uuidv4 } from 'uuid';
 import passport from 'passport';
 import nodemailer from 'nodemailer';
+import { google } from 'googleapis'; // For future Google API checks if needed
+
+// In-memory storage for pending manual signups
+const pendingManualSignups = new Map();
 
 export const signup = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -531,4 +535,57 @@ export const changePassword = asyncHandler(async (req, res) => {
     success: true,
     message: 'Password changed successfully'
   });
+});
+
+export const manualSignup = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
+
+  // 1. Check if email is a Google account (for demo, just check @gmail.com)
+  if (!email.endsWith('@gmail.com')) {
+    return res.status(400).json({ message: 'Email must be a Google account.' });
+  }
+
+  // 2. Generate verification code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // 3. Send code to email
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  await transporter.sendMail({
+    from: process.env.SMTP_USER,
+    to: email,
+    subject: 'Your Everest Restaurant Verification Code',
+    text: `Your verification code is: ${code}`,
+  });
+
+  // 4. Store pending signup in memory
+  pendingManualSignups.set(email, { name, email, password, code, createdAt: Date.now() });
+
+  res.json({ message: 'Verification code sent to your email.' });
+});
+
+export const verifyEmailCode = asyncHandler(async (req, res) => {
+  const { email, code, isManual } = req.body;
+
+  if (isManual) {
+    // Manual signup flow
+    const pending = pendingManualSignups.get(email);
+    if (!pending || pending.code !== code) {
+      return res.status(400).json({ message: 'Invalid or expired code.' });
+    }
+    // Remove from pending
+    pendingManualSignups.delete(email);
+    // Do not create user in DB, just allow frontend to redirect to home
+    return res.json({ verified: true, manual: true });
+  } else {
+    // Google signup flow: handled by your existing Google OAuth logic
+    // (You may want to check a similar in-memory or session store for Google signups)
+    // For now, just return error if not implemented
+    return res.status(400).json({ message: 'Google signup verification not implemented here.' });
+  }
 });
