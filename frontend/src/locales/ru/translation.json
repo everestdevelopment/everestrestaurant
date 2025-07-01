@@ -133,6 +133,9 @@
   "menu_category_specials": "Специальные блюда",
   "menu_category_cocktails": "Коктейли",
   "menu_category_smoothies": "Смузи",
+  "menu_showing": "Показано",
+  "menu_of": "из",
+  "menu_items": "товаров",
 
   "reservations_login_title": "Пожалуйста, войдите, чтобы сделать бронирование",
   "reservations_login_button": "Перейти к входу",
@@ -334,5 +337,8 @@
   "customer_message": "Сообщение клиента",
   "notifications": "Уведомления",
   "message_read_notification": "Ваше сообщение прочитано",
-  "message_replied_notification": "На ваше сообщение ответили"
+  "message_replied_notification": "На ваше сообщение ответили",
+
+  "menu_mobile_items_info": "Показано 20 товаров на странице в мобильном виде",
+  "menu_desktop_items_info": "Показано 20 товаров на странице в десктопном виде"
 } 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -33,12 +33,15 @@ import {
 const Menu = () => {
   const { t } = useTranslation();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
   const {
     categories,
     activeCategory,
     currentPage,
     totalPages,
     currentItems,
+    itemsPerPage,
     isItemLiked,
     loading,
     handlePageChange,
@@ -56,6 +59,16 @@ const Menu = () => {
   } = useMenu();
 
   const { isLiked } = useShopping();
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const Filters = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -160,13 +173,13 @@ const Menu = () => {
 
         {/* Menu Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
               <MenuItemSkeleton key={index} />
             ))}
           </div>
         ) : currentItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {currentItems.map((item) => (
               <div key={item._id} className="animate-fade-in">
                 <MenuItemCard
@@ -186,6 +199,14 @@ const Menu = () => {
 
         {totalPages > 1 && !loading && (
           <div className="mt-12">
+            <div className="text-center mb-4">
+              <p className="text-sm text-slate-500 dark:text-gray-400">
+                {t('menu_showing')} {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, currentItems.length + ((currentPage - 1) * itemsPerPage))} {t('menu_of')} {currentItems.length + ((totalPages - 1) * itemsPerPage)} {t('menu_items')}
+              </p>
+              <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">
+                {windowWidth < 768 ? t('menu_mobile_items_info') : t('menu_desktop_items_info')}
+              </p>
+            </div>
             <MenuPagination
               currentPage={currentPage}
               totalPages={totalPages}
