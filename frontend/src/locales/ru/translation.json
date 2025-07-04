@@ -162,7 +162,9 @@
   "reservations_fail_toast_title": "Ошибка бронирования",
   "reservations_fail_toast_description": "Произошла ошибка при отправке вашего бронирования.",
   "reservations_login_required_toast_title": "Требуется вход",
+  "reservations_login_required_title": "Требуется вход",
   "reservations_login_required_toast_description": "Пожалуйста, войдите, чтобы сделать бронирование.",
+  "reservations_login_required_description": "Пожалуйста, войдите, чтобы сделать бронирование.",
 
   "reservations_policy_title": "Политика бронирования",
   "reservations_policy_description": "Бронирование можно сделать за 30 дней. Мы держим бронь в течение 15 минут после назначенного времени.",

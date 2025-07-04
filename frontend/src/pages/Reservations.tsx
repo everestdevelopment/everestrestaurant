@@ -72,10 +72,10 @@ const Reservations = () => {
         <div className="pt-24 md:pt-32 pb-8 md:pb-12">
           <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 text-center">
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-slate-800 dark:gradient-text mb-4">
-              {t('reservations_login_required_title')}
+              {t('reservations_login_required_toast_title')}
             </h1>
             <p className="text-lg text-slate-600 dark:text-gray-400 mb-6">
-              {t('reservations_login_required_description')}
+              {t('reservations_login_required_toast_description')}
             </p>
             <Button onClick={() => navigate('/login')} className="text-lg px-8 py-3">
               {t('nav_sign_in')}

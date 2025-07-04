@@ -145,7 +145,9 @@
   "reservations_fail_toast_title": "Band qilishda xatolik",
   "reservations_fail_toast_description": "So'rovni yuborishda xatolik yuz berdi.",
   "reservations_login_required_toast_title": "Tizimga kirish talab etiladi",
+  "reservations_login_required_title": "Tizimga kirish talab etiladi",
   "reservations_login_required_toast_description": "Joy band qilish uchun tizimga kiring.",
+  "reservations_login_required_description": "Joy band qilish uchun tizimga kiring.",
 
   "reservations_policy_title": "Band qilish qoidalari",
   "reservations_policy_description": "Joylarni 30 kun oldin band qilish mumkin. Biz band qilingan joyni belgilangan vaqtdan keyin 15 daqiqa ushlab turamiz.",

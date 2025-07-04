@@ -125,7 +125,9 @@
   "reservations_fail_toast_title": "Reservation failed",
   "reservations_fail_toast_description": "There was an error submitting your reservation.",
   "reservations_login_required_toast_title": "Login required",
+  "reservations_login_required_title": "Login required",
   "reservations_login_required_toast_description": "Please login to make a reservation.",
+  "reservations_login_required_description": "Please login to make a reservation.",
 
   "reservations_policy_title": "Reservation Policy",
   "reservations_policy_description": "Reservations can be made up to 30 days in advance. We hold reservations for 15 minutes past the scheduled time.",
