@@ -45,6 +45,7 @@ const MenuPagination: React.FC<MenuPaginationProps> = ({
                 <PaginationLink 
                   onClick={() => onPageChange(1)}
                   className="cursor-pointer hover:bg-cyan-400/10"
+                  isActive={currentPage === 1}
                 >
                   1
                 </PaginationLink>
@@ -57,11 +58,18 @@ const MenuPagination: React.FC<MenuPaginationProps> = ({
             </>
           )}
 
-          {/* Current page and surrounding pages */}
+          {/* Current page and surrounding pages, dublikatlarni oldini olish */}
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+            const start = Math.max(1, Math.min(totalPages - 4, currentPage - 2));
+            const pageNum = start + i;
+            // 1 va totalPages allaqachon chiqarilgan bo'lsa, ularni massivdan chiqaramiz
+            if (
+              (pageNum === 1 && currentPage > 3) ||
+              (pageNum === totalPages && currentPage < totalPages - 2)
+            ) {
+              return null;
+            }
             if (pageNum > totalPages) return null;
-            
             return (
               <PaginationItem key={pageNum}>
                 <PaginationLink 
@@ -87,6 +95,7 @@ const MenuPagination: React.FC<MenuPaginationProps> = ({
                 <PaginationLink 
                   onClick={() => onPageChange(totalPages)}
                   className="cursor-pointer hover:bg-cyan-400/10"
+                  isActive={currentPage === totalPages}
                 >
                   {totalPages}
                 </PaginationLink>

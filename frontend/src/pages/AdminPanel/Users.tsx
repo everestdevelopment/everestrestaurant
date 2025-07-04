@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Eye, Trash, Loader2, Users, UserCheck, UserX, Shield, User, Filter, RefreshCw, Mail, Calendar, ShieldOff } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { getAdminStatusText } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface User {
   _id: string;
@@ -38,17 +39,18 @@ const AdminUsers: React.FC = () => {
   const [filters, setFilters] = useState({ status: 'all', role: 'all' });
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const statusOptions = [
-    { value: 'all', label: 'Barcha holatlar' },
-    { value: 'active', label: getAdminStatusText('active'), color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' },
-    { value: 'inactive', label: getAdminStatusText('inactive'), color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' }
+    { value: 'all', label: t('admin.users.filters.status.all') },
+    { value: 'active', label: t('admin.users.filters.status.active'), color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' },
+    { value: 'inactive', label: t('admin.users.filters.status.inactive'), color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' }
   ];
 
   const roleOptions = [
-    { value: 'all', label: 'Barcha rollar' },
-    { value: 'user', label: 'Foydalanuvchi', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' },
-    { value: 'admin', label: 'Admin', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400' }
+    { value: 'all', label: t('admin.users.filters.role.all') },
+    { value: 'user', label: t('admin.users.filters.role.user'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' },
+    { value: 'admin', label: t('admin.users.filters.role.admin'), color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400' }
   ];
 
   const getStatusBadge = (isActive: boolean) => {
@@ -244,12 +246,12 @@ const AdminUsers: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border mb-6">
         <div className="flex items-center gap-4 mb-4">
           <Filter className="w-5 h-5" />
-          <h3 className="font-semibold">Filtrlash</h3>
+          <h3 className="font-semibold">{t('admin.users.filters.title')}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
             <SelectTrigger>
-              <SelectValue placeholder="Holat bo'yicha filtrlash" />
+              <SelectValue placeholder={t('admin.users.filters.status.placeholder')} />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((option) => (
@@ -262,7 +264,7 @@ const AdminUsers: React.FC = () => {
 
           <Select value={filters.role} onValueChange={(value) => setFilters({ ...filters, role: value })}>
             <SelectTrigger>
-              <SelectValue placeholder="Rol bo'yicha filtrlash" />
+              <SelectValue placeholder={t('admin.users.filters.role.placeholder')} />
             </SelectTrigger>
             <SelectContent>
               {roleOptions.map((option) => (
@@ -278,7 +280,7 @@ const AdminUsers: React.FC = () => {
       {loading ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-8 h-8 animate-spin" />
-          <span className="ml-2">Yuklanmoqda...</span>
+          <span className="ml-2">{t('admin.users.loading')}</span>
         </div>
       ) : error ? (
         <div className="text-red-500 text-center py-8">{error}</div>
@@ -287,13 +289,13 @@ const AdminUsers: React.FC = () => {
           <table className="min-w-full bg-white dark:bg-slate-800 border rounded-lg">
             <thead>
               <tr>
-                <th className="px-4 py-2">Foydalanuvchi ID</th>
-                <th className="px-4 py-2">Ism</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Rol</th>
-                <th className="px-4 py-2">Holat</th>
-                <th className="px-4 py-2">Ro'yxatdan o'tgan</th>
-                <th className="px-4 py-2">Amallar</th>
+                <th className="px-4 py-2">{t('admin.users.table.id')}</th>
+                <th className="px-4 py-2">{t('admin.users.table.name')}</th>
+                <th className="px-4 py-2">{t('admin.users.table.email')}</th>
+                <th className="px-4 py-2">{t('admin.users.table.role')}</th>
+                <th className="px-4 py-2">{t('admin.users.table.status')}</th>
+                <th className="px-4 py-2">{t('admin.users.table.registered')}</th>
+                <th className="px-4 py-2">{t('admin.users.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -364,15 +366,15 @@ const AdminUsers: React.FC = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Foydalanuvchini o'chirish</AlertDialogTitle>
+                            <AlertDialogTitle>{t('admin.users.delete.title')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Bu foydalanuvchini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.
+                              {t('admin.users.delete.description')}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                            <AlertDialogCancel>{t('admin.users.delete.cancel')}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => handleDeleteUser(user._id)}>
-                              O'chirish
+                              {t('admin.users.delete.confirm')}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -390,37 +392,37 @@ const AdminUsers: React.FC = () => {
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Foydalanuvchi tafsilotlari</DialogTitle>
+            <DialogTitle>{t('admin.users.details.title')}</DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-6">
               {/* User Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-semibold mb-2">Foydalanuvchi ma'lumotlari</h3>
+                  <h3 className="font-semibold mb-2">{t('admin.users.details.infoTitle')}</h3>
                   <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">ID:</span> #{selectedUser._id.slice(-6)}</p>
-                    <p><span className="font-medium">Ism:</span> {selectedUser.name}</p>
-                    <p><span className="font-medium">Email:</span> {selectedUser.email}</p>
-                    <p><span className="font-medium">Rol:</span> {getRoleBadge(selectedUser.role)}</p>
+                    <p><span className="font-medium">{t('admin.users.details.id')}:</span> #{selectedUser._id.slice(-6)}</p>
+                    <p><span className="font-medium">{t('admin.users.details.name')}:</span> {selectedUser.name}</p>
+                    <p><span className="font-medium">{t('admin.users.details.email')}:</span> {selectedUser.email}</p>
+                    <p><span className="font-medium">{t('admin.users.details.role')}:</span> {getRoleBadge(selectedUser.role)}</p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-2">Holat ma'lumotlari</h3>
+                  <h3 className="font-semibold mb-2">{t('admin.users.details.statusTitle')}</h3>
                   <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">Holat:</span> {getStatusBadge(selectedUser.isActive)}</p>
-                    <p><span className="font-medium">Ro'yxatdan o'tgan:</span> {formatDate(selectedUser.createdAt)}</p>
-                    <p><span className="font-medium">Yangilangan:</span> {formatDate(selectedUser.updatedAt)}</p>
+                    <p><span className="font-medium">{t('admin.users.details.status')}:</span> {getStatusBadge(selectedUser.isActive)}</p>
+                    <p><span className="font-medium">{t('admin.users.details.registered')}:</span> {formatDate(selectedUser.createdAt)}</p>
+                    <p><span className="font-medium">{t('admin.users.details.updated')}:</span> {formatDate(selectedUser.updatedAt)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Account Actions */}
               <div>
-                <h3 className="font-semibold mb-2">Hisob amallari</h3>
+                <h3 className="font-semibold mb-2">{t('admin.users.details.accountActions')}</h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span>Holat:</span>
+                    <span>{t('admin.users.details.status')}</span>
                     <Switch
                       checked={selectedUser.isActive}
                       onCheckedChange={(checked) => {
@@ -430,7 +432,7 @@ const AdminUsers: React.FC = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Rol:</span>
+                    <span>{t('admin.users.details.role')}</span>
                     <Select
                       value={selectedUser.role}
                       onValueChange={(value) => {

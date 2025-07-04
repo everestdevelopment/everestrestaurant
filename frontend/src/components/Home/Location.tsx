@@ -62,7 +62,7 @@ const Location = () => {
                   {t('location_hours_title', 'Ishlash vaqti')}
                 </p>
                 <p className="text-slate-600 dark:text-gray-400">
-                  {t('location_hours_value', 'Har kuni: 09:00 — 23:00')}
+                  {t('location_hours_value', 'Har kuni: 05:00 — 22:00')}
                 </p>
               </div>
             </div>

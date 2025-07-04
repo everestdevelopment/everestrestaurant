@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 
 // Lazy load other pages with error boundaries
 const Menu = lazy(() => import('./pages/Menu'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Cart = lazy(() => import('./pages/Cart'));
@@ -123,6 +124,13 @@ const AppRouter = () => {
           <ErrorBoundary fallback={<ErrorFallback />}>
             <Suspense fallback={<LoadingFallback />}>
               <Menu />
+            </Suspense>
+          </ErrorBoundary>
+        } />
+        <Route path="/menu/:id" element={
+          <ErrorBoundary fallback={<ErrorFallback />}>
+            <Suspense fallback={<LoadingFallback />}>
+              <ProductDetail />
             </Suspense>
           </ErrorBoundary>
         } />

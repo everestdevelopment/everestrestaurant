@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { Eye, Trash, Loader2, Package, Clock, CheckCircle, XCircle, Truck, Filter, History } from 'lucide-react';
+import { Eye, Trash, Loader2, Package, Clock, CheckCircle, XCircle, Truck, Filter, History, RefreshCw } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import StatusManager from '@/components/ui/StatusManager';
 import { getAdminStatusText } from '@/lib/utils';
@@ -224,7 +224,7 @@ const AdminOrders: React.FC = () => {
       <div className="admin-header">
         <h1 className="admin-title">{t('admin.orders.title', 'Buyurtmalar')}</h1>
         <Button variant="outline" size="sm" onClick={fetchOrders} className="admin-button">
-          <Loader2 className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Yangilash')}
+          <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Yangilash')}
         </Button>
       </div>
 

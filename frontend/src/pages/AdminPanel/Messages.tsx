@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Loader2, MessageSquare, Mail, MailOpen, Trash, Eye, Filter, RefreshCw, User, Calendar, Send, Reply, Bell } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
-import { io } from 'socket.io-client';
+import { createSocketManager, disconnectSocketManager } from '@/lib/socket';
 import { useAuth } from '@/context/AuthContext';
 import { getAdminStatusText } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface ContactMessage {
   _id: string;
@@ -45,6 +46,7 @@ interface MessageStats {
 
 const AdminMessages: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [stats, setStats] = useState<MessageStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,7 @@ const AdminMessages: React.FC = () => {
   const { toast } = useToast();
 
   const statusOptions = [
-    { value: 'all', label: 'Barcha holatlar', color: 'bg-gray-100 text-gray-800' },
+    { value: 'all', label: t('admin.messages.allStatuses'), color: 'bg-gray-100 text-gray-800' },
     { value: 'new', label: getAdminStatusText('new'), color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' },
     { value: 'read', label: getAdminStatusText('read'), color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' },
     { value: 'replied', label: getAdminStatusText('replied'), color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400' },
@@ -76,8 +78,8 @@ const AdminMessages: React.FC = () => {
       const messagesData = data.data?.docs || data.data || [];
       setMessages(messagesData);
     } catch (err: any) {
-      setError(err.message || 'Xatolik yuz berdi');
-      toast({ title: 'Xato', description: err.message || 'Xatolik yuz berdi', variant: 'destructive' });
+      setError(err.message || t('admin.messages.fetchError'));
+      toast({ title: t('admin.messages.error'), description: err.message || t('admin.messages.fetchError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -101,61 +103,56 @@ const AdminMessages: React.FC = () => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    let newSocket = null;
+    let socketManager: any = null;
     
     if (user?.role === 'admin' && user?.token) {
-      // WebSocket ulanish
-      newSocket = io('http://localhost:5000', {
-        transports: ['websocket', 'polling'],
-        timeout: 20000,
-        forceNew: true,
+      socketManager = createSocketManager({
+        url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000',
         auth: {
-          token: user.token
+          token: user.token,
+          userId: user._id,
+          role: user.role,
+          name: user.name
         }
       });
 
-      newSocket.on('connect', () => {
-        console.log('WebSocket connected successfully');
-        setSocket(newSocket);
-      });
+      socketManager.connect()
+        .then((socket) => {
+          console.log('✅ Messages socket connected successfully');
+          setSocket(socket);
 
-      newSocket.on('connect_error', (error) => {
-        console.error('WebSocket connection error:', error);
-        // Don't show error to user, just log it
-      });
-
-      newSocket.on('disconnect', (reason) => {
-        console.log('WebSocket disconnected:', reason);
-      });
-
-      // Yangi xabar kelganda
-      newSocket.on('new_contact_message', (data) => {
-        console.log('Yangi xabar keldi (Messages):', data);
-        // Yangi xabarni ro'yxatga qo'shish
-        const newMessage: ContactMessage = {
-          _id: data.contactId,
-          name: data.contact.name,
-          email: data.contact.email,
-          phone: data.contact.phone,
-          message: data.contact.message,
-          read: false,
-          status: 'new',
-          createdAt: data.contact.createdAt,
-          updatedAt: data.contact.createdAt
-        };
-        
-        setMessages(prev => [newMessage, ...prev]);
-        
-        // Toast xabarini ko'rsatish
-        toast({ 
-          title: 'Yangi xabar', 
-          description: `${data.contact.name} dan yangi xabar keldi`,
+          // Yangi xabar kelganda
+          socketManager.on('new_contact_message', (data) => {
+            console.log('Yangi xabar keldi (Messages):', data);
+            // Yangi xabarni ro'yxatga qo'shish
+            const newMessage: ContactMessage = {
+              _id: data.contactId,
+              name: data.contact.name,
+              email: data.contact.email,
+              phone: data.contact.phone,
+              message: data.contact.message,
+              read: false,
+              status: 'new',
+              createdAt: data.contact.createdAt,
+              updatedAt: data.contact.createdAt
+            };
+            
+            setMessages(prev => [newMessage, ...prev]);
+            
+            // Toast xabarini ko'rsatish
+            toast({ 
+              title: 'Yangi xabar', 
+              description: `${data.contact.name} dan yangi xabar keldi`,
+            });
+          });
+        })
+        .catch((error) => {
+          console.error('❌ Failed to connect messages socket:', error);
         });
-      });
 
       return () => {
-        if (newSocket) {
-          newSocket.disconnect();
+        if (socketManager) {
+          disconnectSocketManager();
         }
       };
     }
@@ -290,12 +287,12 @@ const AdminMessages: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Xabarlar</h1>
-          <p className="text-slate-600 dark:text-gray-400">Mijozlardan kelgan xabarlar</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{t('admin.messages.title')}</h1>
+          <p className="text-slate-600 dark:text-gray-400">{t('admin.messages.subtitle')}</p>
         </div>
         <Button onClick={fetchMessages} disabled={loading} variant="outline" size="sm">
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Yangilash
+          {t('admin.messages.refresh')}
         </Button>
       </div>
 

@@ -5,7 +5,9 @@ import { io, activeAdmins, pendingLogins } from '../server.js';
 import { v4 as uuidv4 } from 'uuid';
 import passport from 'passport';
 import nodemailer from 'nodemailer';
+import dotenv, { config } from 'dotenv';
 
+dotenv.config();
 // In-memory storage for pending signups
 const pendingManualSignups = new Map();
 const pendingGoogleSignups = new Map();

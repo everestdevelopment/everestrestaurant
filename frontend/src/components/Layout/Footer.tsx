@@ -1,13 +1,29 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Heart, Facebook, Instagram, Twitter, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const socialLinks = [
-  { name: 'Facebook', url: 'https://facebook.com/everestrestaurant' },
-  { name: 'Instagram', url: 'https://instagram.com/everestrestaurant' },
-  { name: 'Twitter', url: 'https://twitter.com/everestrest' },
-  { name: 'TikTok', url: 'https://tiktok.com/@everestrestaurant' },
+  { 
+    name: 'Facebook', 
+    url: 'https://facebook.com/everestrestaurant',
+    icon: Facebook
+  },
+  { 
+    name: 'Instagram', 
+    url: 'https://instagram.com/everestrestaurant',
+    icon: Instagram
+  },
+  { 
+    name: 'Twitter', 
+    url: 'https://twitter.com/everestrest',
+    icon: Twitter
+  },
+  { 
+    name: 'Telegram', 
+    url: 'https://t.me/everestrestaurant',
+    icon: Send
+  },
 ];
 
 const Footer = () => {
@@ -38,18 +54,21 @@ const Footer = () => {
               {t('footer_description')}
             </p>
             <div className="flex space-x-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg flex items-center justify-center text-slate-600 dark:text-white hover:bg-yellow-400 hover:text-slate-900 transition-all duration-200"
-                  aria-label={social.name}
-                >
-                  <span className="text-sm font-semibold">{social.name[0]}</span>
-                </a>
-              ))}
+              {socialLinks.map((social) => {
+                const IconComponent = social.icon;
+                return (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 bg-slate-200 dark:bg-white/5 rounded-lg flex items-center justify-center text-slate-600 dark:text-white hover:bg-yellow-400 hover:text-slate-900 transition-all duration-200"
+                    aria-label={social.name}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -75,7 +94,7 @@ const Footer = () => {
                 <Mail className="w-5 h-5 text-yellow-400 mt-1" />
                 <div>
                   <p className="text-slate-800 dark:text-white font-medium">{t('footer_email_title')}</p>
-                  <p className="text-slate-500 dark:text-gray-400 text-sm">mustafoyev@gmail.com</p>
+                  <p className="text-slate-500 dark:text-gray-400 text-sm">mustafoyev7788@gmail.com</p>
                 </div>
               </div>
             </div>
@@ -94,7 +113,7 @@ const Footer = () => {
                 <Clock className="w-4 h-4 text-yellow-400" />
                 <span className="text-slate-800 dark:text-white text-sm">{t('footer_hours_fri_sun')}</span>
               </div>
-              <p className="text-slate-500 dark:text-gray-400 text-sm ml-6">5:00 PM - 23:59 PM</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm ml-6">5:00 PM - 00:00 PM</p>
             </div>
 
             <div className="space-y-2">

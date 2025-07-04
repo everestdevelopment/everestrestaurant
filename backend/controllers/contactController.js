@@ -5,7 +5,13 @@ import { emitToAll } from '../utils/socketEmitter.js';
 
 // Create new contact message
 export const createContact = asyncHandler(async (req, res) => {
-  const { name, email, phone, message } = req.body;
+  let { name, email, phone, message } = req.body;
+  // Agar foydalanuvchi login bo'lsa va phone bo'sh bo'lsa, user.phone ni ishlatamiz
+  if (req.user) {
+    if (!phone) phone = req.user.phone;
+    if (!name) name = req.user.name;
+    if (!email) email = req.user.email;
+  }
   
   const contact = await Contact.create({
     name,

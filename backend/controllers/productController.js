@@ -53,87 +53,18 @@ export const getProduct = asyncHandler(async (req, res) => {
   
   const productWithFullImage = {
     ...product.toObject(),
-    image: getFullImageUrl(product.image)
+    image: getFullImageUrl(product.image),
+    additionalImages: product.additionalImages?.map(img => getFullImageUrl(img)) || []
   };
   
   res.json(productWithFullImage);
 });
 
-// POST /api/products (admin only)
-export const createProduct = asyncHandler(async (req, res) => {
-  // console.log('🔍 Creating product with data:', req.body);
-  // console.log('👤 User:', req.user);
-  // console.log('🖼️ Backend: Received image:', req.body.image);
-  
-  const { nameKey, descriptionKey, price, image, category, rating, quantity, isAvailable } = req.body;
-  
-  // URL ni to'g'ridan-to'g'ri saqlaymiz, hech qanday o'zgartirishsiz
-  const imageUrl = image;
-  
-  // console.log('💾 Saving product with image URL:', imageUrl);
-  
-  const productData = {
-    nameKey, 
-    descriptionKey, 
-    price, 
-    image: imageUrl, 
-    category, 
-    rating,
-    quantity: quantity !== undefined ? quantity : undefined,
-    isAvailable: isAvailable !== undefined ? isAvailable : true
-  };
-  
-  // console.log('💾 Final product data to save:', productData);
-  
-  const product = await Product.create(productData);
-  
-  // console.log('✅ Product created:', product);
-  // console.log('🖼️ Saved image URL:', product.image);
-  
-  // Verify the product was saved correctly
-  const savedProduct = await Product.findById(product._id);
-  // console.log('🔍 Verification - Saved product from DB:', savedProduct);
-  // console.log('🖼️ Verification - Image URL from DB:', savedProduct?.image);
-  
-  const productWithFullImage = {
-    ...product.toObject(),
-    image: getFullImageUrl(product.image)
-  };
-  
-  // console.log('📤 Sending response with image:', productWithFullImage.image);
-  
-  res.status(201).json(productWithFullImage);
-});
-
-// PUT /api/products/:id (admin only)
-export const updateProduct = asyncHandler(async (req, res) => {
-  const { nameKey, descriptionKey, price, image, category, rating, quantity, isAvailable } = req.body;
-
-  // URL ni to'g'ridan-to'g'ri saqlaymiz, hech qanday o'zgartirishsiz
-  const imageUrl = image;
-
-  const updateData = { 
-    nameKey, 
-    descriptionKey, 
-    price, 
-    category, 
-    rating 
-  };
-
-  // Add image if provided
-  if (imageUrl) {
-    updateData.image = imageUrl;
-  }
-
-  // Add quantity and isAvailable if provided
-  if (quantity !== undefined) updateData.quantity = quantity;
-  if (isAvailable !== undefined) updateData.isAvailable = isAvailable;
-
-  // console.log('💾 Updating product with data:', updateData);
-
+// POST /api/products/:id/view (public) - View count oshirish
+export const incrementViewCount = asyncHandler(async (req, res) => {
   const product = await Product.findByIdAndUpdate(
-    req.params.id, 
-    updateData, 
+    req.params.id,
+    { $inc: { viewCount: 1 } },
     { new: true }
   );
   
@@ -142,14 +73,122 @@ export const updateProduct = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
   
-  // console.log('✅ Product updated:', product);
-  
-  const productWithFullImage = {
-    ...product.toObject(),
-    image: getFullImageUrl(product.image)
+  res.json({ success: true, viewCount: product.viewCount });
+});
+
+// POST /api/products (admin only)
+export const createProduct = asyncHandler(async (req, res) => {
+  const {
+    nameKey,
+    descriptionKey,
+    price,
+    image,
+    category,
+    rating,
+    quantity,
+    isAvailable,
+    fullDescription,
+    types,
+    ingredients,
+    preparationMethod,
+    preparationTime,
+    calories,
+    allergens,
+    tags,
+    additionalImages,
+    metaTitle,
+    metaDescription
+  } = req.body;
+
+  const productData = {
+    nameKey,
+    descriptionKey,
+    price,
+    image,
+    category,
+    rating,
+    quantity: quantity !== undefined ? quantity : undefined,
+    isAvailable: isAvailable !== undefined ? isAvailable : true,
+    fullDescription,
+    types,
+    ingredients,
+    preparationMethod,
+    preparationTime,
+    calories,
+    allergens,
+    tags,
+    additionalImages,
+    metaTitle,
+    metaDescription,
+    createdBy: req.user._id,
+    lastModifiedBy: req.user._id
   };
-  
-  res.json(productWithFullImage);
+
+  const product = await Product.create(productData);
+  res.status(201).json(product);
+});
+
+// PUT /api/products/:id (admin only)
+export const updateProduct = asyncHandler(async (req, res) => {
+  console.log('UPDATE PRODUCT BODY:', req.body); // Debug log
+  const {
+    nameKey,
+    descriptionKey,
+    price,
+    image,
+    category,
+    rating,
+    quantity,
+    isAvailable,
+    fullDescription,
+    types,
+    ingredients,
+    preparationMethod,
+    preparationTime,
+    calories,
+    allergens,
+    tags,
+    additionalImages,
+    metaTitle,
+    metaDescription
+  } = req.body;
+
+  const updateData = {
+    nameKey,
+    descriptionKey,
+    price,
+    image,
+    category,
+    rating,
+    fullDescription,
+    types,
+    ingredients,
+    preparationMethod,
+    preparationTime,
+    calories,
+    allergens,
+    tags,
+    additionalImages,
+    metaTitle,
+    metaDescription,
+    lastModifiedBy: req.user._id
+  };
+
+  if (quantity !== undefined) updateData.quantity = quantity;
+  if (isAvailable !== undefined) updateData.isAvailable = isAvailable;
+
+  const product = await Product.findByIdAndUpdate(
+    req.params.id,
+    updateData,
+    { new: true }
+  );
+
+  if (!product) {
+    res.status(404);
+    throw new Error('Product not found');
+  }
+
+  res.json(product);
 });
 
 // DELETE /api/products/:id (admin only)
@@ -171,8 +210,13 @@ export const getProductStats = asyncHandler(async (req, res) => {
     { $group: { _id: '$category', count: { $sum: 1 } } }
   ]);
   
+  const popularProducts = await Product.find({ isPopular: true }).limit(5);
+  const newProducts = await Product.find({ isNew: true }).limit(5);
+  
   res.json({
     totalProducts,
-    productsByCategory
+    productsByCategory,
+    popularProducts,
+    newProducts
   });
 });

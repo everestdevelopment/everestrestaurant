@@ -10,7 +10,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/api';
-import { io } from 'socket.io-client';
+import { getGlobalSocket, createSocketManager } from '@/lib/socket';
 import { useAdminNotifications } from '@/context/AdminNotificationContext';
 
 const Navbar = () => {
@@ -25,21 +25,46 @@ const Navbar = () => {
 
   useEffect(() => {
     if (user?.role === 'admin') {
-      // WebSocket ulanish
-      const newSocket = io('http://localhost:5000');
-      setSocket(newSocket);
+      // Use existing socket if available, otherwise create new one
+      let socketManager = getGlobalSocket();
+      
+      if (!socketManager) {
+        socketManager = createSocketManager({
+          url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000',
+          auth: {
+            token: user.token,
+            userId: user._id,
+            role: user.role,
+            name: user.name
+          }
+        });
+      }
 
-      // Yangi xabar kelganda
-      newSocket.on('new_contact_message', (data) => {
+      // Only connect if not already connected
+      if (!socketManager.isConnected()) {
+        socketManager.connect()
+          .then((socket) => {
+            setSocket(socket);
+            console.log('✅ Navbar socket connected');
+
+            // Yangi xabar kelganda
+            socketManager.on('new_contact_message', (data) => {
+              updateUnreadCount();
+            });
+
+            // Dastlabki sonni olish
+            updateUnreadCount();
+          })
+          .catch((error) => {
+            console.error('❌ Failed to connect navbar socket:', error);
+          });
+      } else {
+        // Socket already connected, just add listeners
+        socketManager.on('new_contact_message', (data) => {
+          updateUnreadCount();
+        });
         updateUnreadCount();
-      });
-
-      // Dastlabki sonni olish
-      updateUnreadCount();
-
-      return () => {
-        newSocket.close();
-      };
+      }
     }
   }, [user, updateUnreadCount]);
 
