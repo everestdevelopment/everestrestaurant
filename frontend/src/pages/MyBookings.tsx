@@ -9,14 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency, getStatusText } from '@/lib/utils';
-import { Order } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 // Interfaces
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
 interface Order {
   _id: string;
-  orderItems: { name: string; quantity: number; price: number }[];
+  orderItems: OrderItem[];
   totalPrice: number;
   total?: number; // Keep optional for backward compatibility
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
@@ -37,10 +42,10 @@ const MyBookings = () => {
   const { user, loading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, boolean] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const fetchData = async () => {
-    setLoading(true);
+    setDataLoading(true);
     try {
       const [ordersData, reservationsData] = await Promise.all([
         apiFetch('/orders/myorders'),
@@ -51,7 +56,7 @@ const MyBookings = () => {
     } catch (error) {
       toast({ title: "Error", description: "Failed to fetch your bookings.", variant: "destructive" });
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -67,8 +72,9 @@ const MyBookings = () => {
       await apiFetch(`/orders/${id}/cancel`, { method: 'PUT' });
       toast({ title: t('toast_success'), description: t('mybookings_cancel_order_success') });
       fetchData(); // Refresh data
-    } catch (error: any) {
-      toast({ title: t('toast_error'), description: error.message || t('mybookings_cancel_order_fail'), variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('mybookings_cancel_order_fail');
+      toast({ title: t('toast_error'), description: errorMessage, variant: "destructive" });
     }
   };
 
@@ -78,8 +84,9 @@ const MyBookings = () => {
       await apiFetch(`/reservations/${id}/cancel`, { method: 'PUT' });
       toast({ title: t('toast_success'), description: t('mybookings_cancel_reservation_success') });
       fetchData(); // Refresh data
-    } catch (error: any) {
-      toast({ title: t('toast_error'), description: error.message || t('mybookings_cancel_reservation_fail'), variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('mybookings_cancel_reservation_fail');
+      toast({ title: t('toast_error'), description: errorMessage, variant: "destructive" });
     }
   };
   
@@ -107,7 +114,7 @@ const MyBookings = () => {
                 <CardTitle className="text-lg md:text-xl">{t('mybookings_your_orders_title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
-                {loading ? <p className="text-sm md:text-base">{t('loading_orders')}</p> : orders.length > 0 ? orders.map(order => (
+                {dataLoading ? <p className="text-sm md:text-base">{t('loading_orders')}</p> : orders.length > 0 ? orders.map(order => (
                   <div key={order._id} className="p-3 md:p-4 bg-slate-800/50 rounded-lg">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
                       <div className="flex-1 min-w-0">
@@ -151,7 +158,7 @@ const MyBookings = () => {
                 <CardTitle className="text-lg md:text-xl">{t('mybookings_your_reservations_title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
-                {loading ? <p className="text-sm md:text-base">{t('loading_reservations')}</p> : reservations.length > 0 ? reservations.map(res => (
+                {dataLoading ? <p className="text-sm md:text-base">{t('loading_reservations')}</p> : reservations.length > 0 ? reservations.map(res => (
                   <div key={res._id} className="p-3 md:p-4 bg-slate-800/50 rounded-lg">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
                       <div className="flex-1">

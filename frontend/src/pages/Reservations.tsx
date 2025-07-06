@@ -48,8 +48,20 @@ const Reservations = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [createdReservation, setCreatedReservation] = useState<any>(null);
+  const [createdReservation, setCreatedReservation] = useState<unknown>(null);
   const [showPayment, setShowPayment] = useState(false);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      date: undefined,
+      time: '',
+      guests: 1,
+    },
+  });
 
   // Check if user is logged in
   useEffect(() => {
@@ -86,18 +98,6 @@ const Reservations = () => {
       </div>
     );
   }
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      date: undefined,
-      time: '',
-      guests: 1,
-    },
-  });
 
   const { date, time, guests } = form.watch();
   const totalPrice = guests * PRICE_PER_GUEST;
@@ -140,10 +140,11 @@ const Reservations = () => {
         title: t('reservations_created_title'),
         description: t('reservations_created_description'),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('reservations_fail_toast_description');
       toast({
         title: t('reservations_fail_toast_title'),
-        description: error.message || t('reservations_fail_toast_description'),
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

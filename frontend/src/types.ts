@@ -78,11 +78,21 @@ export interface Order {
   createdAt: string;
 }
 
+export interface Reservation {
+  _id: string;
+  user: User;
+  date: string;
+  time: string;
+  guests: number;
+  status: 'Pending' | 'Confirmed' | 'Cancelled';
+  createdAt: string;
+}
+
 export interface Payment {
   _id: string;
   user: User;
   order?: Order;
-  reservation?: any; // Define reservation type if available
+  reservation?: Reservation;
   amount: number;
   paymentMethod: string;
   status: 'pending' | 'completed' | 'failed';
