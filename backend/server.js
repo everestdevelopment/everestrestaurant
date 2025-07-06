@@ -39,9 +39,14 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:8080",
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:8080",
+      "https://everestrestaurantcook.vercel.app",
+      "https://everestrestaurantcook.vercel.app/"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   },
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,
@@ -53,10 +58,40 @@ const io = new Server(server, {
 // Set io for socket emitter utility
 setIO(io);
 
+// CORS headers middleware
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'https://everestrestaurantcook.vercel.app',
+    'https://everestrestaurantcook.vercel.app/'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 // Middleware
 app.use(cors({ 
-  origin: process.env.FRONTEND_URL || "http://localhost:8080", 
-  credentials: true 
+  origin: [
+    process.env.FRONTEND_URL || "http://localhost:8080",
+    "https://everestrestaurantcook.vercel.app",
+    "https://everestrestaurantcook.vercel.app/"
+  ], 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
