@@ -21,8 +21,6 @@ import adminNotificationRoutes from './routes/adminNotificationRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { setIO } from './utils/socketEmitter.js';
 import session from 'express-session';
-import passport from 'passport';
-import './config/passport.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -69,8 +67,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false } // Set to true if using HTTPS
 }));
-app.use(passport.initialize());
-app.use(passport.session());
+
 
 // Fix __dirname for ES modules (must be before any usage)
 const __filename = fileURLToPath(import.meta.url);

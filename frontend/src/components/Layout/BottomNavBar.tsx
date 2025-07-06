@@ -1,14 +1,30 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Menu as MenuIcon, Calendar, BookOpen, User, LogOut, Info, Shield } from 'lucide-react';
+import { Home, Menu as MenuIcon, Calendar, BookOpen, User, LogOut, Info, Shield, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '@/components/ui/use-toast';
 
 const BottomNavBar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isProfileComplete, isNewUser } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleNavigation = (path: string, e?: React.MouseEvent) => {
+    if (user && isNewUser() && !isProfileComplete() && path !== '/profile' && path !== '/logout') {
+      e?.preventDefault();
+      toast({
+        title: t('navigation_blocked_title', 'Profil to\'ldirilmagan'),
+        description: t('navigation_blocked_desc', 'Davom etish uchun avval profil ma\'lumotlarini to\'ldiring'),
+        variant: 'destructive',
+      });
+      navigate('/profile');
+      return false;
+    }
+    return true;
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -34,9 +50,10 @@ const BottomNavBar: React.FC = () => {
           <li key={to} className="flex-1">
             <NavLink
               to={to}
+              onClick={(e) => handleNavigation(to, e)}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center justify-center text-xs pt-1 transition text-slate-500 dark:text-gray-400',
+                  'flex flex-col items-center justify-center text-xs pt-1 transition text-slate-500 dark:text-gray-400 relative',
                   isActive && 'text-yellow-500 dark:text-yellow-400'
                 )
               }
@@ -44,6 +61,9 @@ const BottomNavBar: React.FC = () => {
             >
               <Icon className="w-6 h-6 mb-0.5" />
               <span className="text-[10px] leading-none">{t(label)}</span>
+              {user && !isProfileComplete() && to !== '/profile' && to !== '/logout' && (
+                <AlertCircle className="w-2 h-2 absolute -top-1 -right-1 text-red-500" />
+              )}
             </NavLink>
           </li>
         ))}

@@ -9,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 const Register = () => {
   const { t } = useTranslation();
@@ -16,168 +17,217 @@ const Register = () => {
   const { toast } = useToast();
   const { manualLogin } = useAuth();
 
-  const [step, setStep] = useState<'form' | 'verify' | 'set-password'>('form');
-  const [manualData, setManualData] = useState({ name: '', email: '', password: '' });
-  const [googleUserData, setGoogleUserData] = useState<any>(null); // { name, email, googleId }
-  const [verifyEmail, setVerifyEmail] = useState('');
-  const [isManual, setIsManual] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
 
-  // Step 1: Manual signup form submit
-  const handleManualSignup = async (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    const form = e.target as HTMLFormElement;
-    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
-    try {
-      const res = await fetch('/api/auth/signup/manual', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+    
+    // Validatsiya
+    if (formData.password !== formData.confirmPassword) {
+      toast({ 
+        title: t('register_password_mismatch_title', 'Parol mos kelmadi'), 
+        description: t('register_password_mismatch_desc', 'Parollar bir xil emas'), 
+        variant: 'destructive' 
       });
-      const data = await res.json();
-      if (res.ok) {
-        setManualData({ name, email, password });
-        setVerifyEmail(email);
-        setIsManual(true);
-        setStep('verify');
-        toast({ title: t('register_code_sent_title'), description: t('register_code_sent_desc') });
-      } else {
-        toast({ title: t('register_fail_toast_title'), description: data.message || t('register_fail_toast_description'), variant: 'destructive' });
-      }
-    } catch (err) {
-      toast({ title: t('register_fail_toast_title'), description: t('register_fail_toast_description'), variant: 'destructive' });
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
 
-  // Step 1: Google signup
-  const handleGoogleSignup = async () => {
-    // Open Google OAuth window
-    window.location.href = '/api/auth/google';
-    // After OAuth, backend should redirect to /verify with tempData param
-    // You need to handle this in your OAuth callback and frontend routing
-  };
-
-  // Step 2: Code verification
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/verify-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: verifyEmail, code, isManual }),
+    if (formData.password.length < 6) {
+      toast({ 
+        title: t('register_password_weak_title', 'Parol juda zaif'), 
+        description: t('register_password_weak_desc', 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak'), 
+        variant: 'destructive' 
       });
-      const data = await res.json();
-      if (res.ok && data.verified && isManual) {
-        localStorage.setItem('token', data.token);
-        if (data.user && data.token && manualLogin) {
-          manualLogin(data.user, data.token);
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const response = await apiFetch('/auth/signup', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      if (response) {
+        // Avtomatik login qilish
+        const loginResponse = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          })
+        });
+
+        if (loginResponse && loginResponse.user && loginResponse.token) {
+          manualLogin(loginResponse.user, loginResponse.token);
+          toast({ 
+            title: t('register_success_toast_title', 'Ro\'yxatdan o\'tish muvaffaqiyatli!'), 
+            description: t('register_success_toast_description', 'Siz muvaffaqiyatli ro\'yxatdan o\'tdingiz. Iltimos, profil ma\'lumotlaringizni to\'ldiring.') 
+          });
+          navigate('/profile');
         }
-        toast({ title: t('register_success_toast_title'), description: t('register_success_toast_description') });
-        navigate('/');
-      } else if (res.ok && data.verified && !isManual) {
-        setGoogleUserData({ name: data.name, email: data.email, googleId: data.googleId });
-        setStep('set-password');
-      } else {
-        toast({ title: t('register_fail_toast_title'), description: data.message || t('register_fail_toast_description'), variant: 'destructive' });
       }
-    } catch (err) {
-      toast({ title: t('register_fail_toast_title'), description: t('register_fail_toast_description'), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 3: Set password (Google signup only)
-  const handleSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/set-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...googleUserData, password }),
+    } catch (error: any) {
+      console.error('Register error:', error);
+      toast({ 
+        title: t('register_fail_toast_title', 'Xatolik yuz berdi'), 
+        description: error.message || t('register_fail_toast_description', 'Ro\'yxatdan o\'tishda xatolik yuz berdi'), 
+        variant: 'destructive' 
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast({ title: t('register_success_toast_title'), description: t('register_success_toast_description') });
-        navigate('/');
-      } else {
-        toast({ title: t('register_fail_toast_title'), description: data.message || t('register_fail_toast_description'), variant: 'destructive' });
-      }
-    } catch (err) {
-      toast({ title: t('register_fail_toast_title'), description: t('register_fail_toast_description'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // UI rendering
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
       <div className="pt-32 pb-12 md:pt-40 md:pb-20">
         <div className="max-w-md mx-auto px-4 sm:px-6">
-          <div className="bg-white dark:glass-card shadow-lg rounded-lg p-8 animate-fade-in">
-            {step === 'form' && (
-              <>
-                <h1 className="text-3xl font-bold mb-6 text-center">{t('register_title')}</h1>
-                <form onSubmit={handleManualSignup} className="space-y-6">
-                  <Input name="name" type="text" placeholder={t('register_form_name_placeholder')} required />
-                  <Input name="email" type="email" placeholder={t('register_form_email_placeholder')} required />
-                  <div className="relative">
-                    <Input name="password" type={showPassword ? 'text' : 'password'} placeholder={t('register_form_password_placeholder')} required />
-                    <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setShowPassword(v => !v)}>
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('register_form_submit_button')}
-                  </Button>
-                </form>
-                <div className="my-6 text-center text-gray-500">{t('register_or')}</div>
-                <Button type="button" className="w-full flex items-center justify-center gap-2" onClick={handleGoogleSignup}>
-                  <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5" />
-                  {t('register_with_google')}
-                </Button>
-              </>
-            )}
-            {step === 'verify' && (
-              <>
-                <h2 className="text-xl font-bold mb-4 text-center">{t('verify_title')}</h2>
-                <form onSubmit={handleVerifyCode} className="space-y-4">
-                  <p className="mb-2 text-sm text-gray-600 dark:text-gray-300 text-center">
-                    {t('verify_description')} <span className="font-semibold">{verifyEmail}</span>
-                  </p>
-                  <Input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder={t('verify_code_placeholder')} maxLength={6} className="text-center tracking-widest text-lg" required />
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('verify_button')}
-                  </Button>
-                </form>
-              </>
-            )}
-            {step === 'set-password' && (
-              <>
-                <h2 className="text-xl font-bold mb-4 text-center">{t('set_password_title')}</h2>
-                <form onSubmit={handleSetPassword} className="space-y-4">
-                  <Input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder={t('set_password_new_placeholder')} required />
-                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setShowPassword(v => !v)}>
+          <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-8 animate-fade-in">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                {t('register_title', 'Ro\'yxatdan o\'tish')}
+              </h1>
+              <p className="mt-2 text-slate-600 dark:text-slate-400">
+                {t('register_description', 'Everest Restaurant jamiyatiga qo\'shiling')}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Ism */}
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('register_form_name', 'To\'liq ism')}
+                </label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder={t('register_form_name_placeholder', 'To\'liq ismingizni kiriting')}
+                  required
+                  className="w-full"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('register_form_email', 'Email manzil')}
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder={t('register_form_email_placeholder', 'Email manzilingizni kiriting')}
+                  required
+                  className="w-full"
+                />
+              </div>
+
+              {/* Parol */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('register_form_password', 'Parol')}
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder={t('register_form_password_placeholder', 'Parol kiriting')}
+                    required
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('set_password_button')}
-                  </Button>
-                </form>
-              </>
-            )}
+                </div>
+              </div>
+
+              {/* Parolni tasdiqlash */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('register_form_confirm_password', 'Parolni tasdiqlang')}
+                </label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder={t('register_form_confirm_password_placeholder', 'Parolni qayta kiriting')}
+                    required
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Tugma */}
+              <Button 
+                type="submit" 
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  t('register_form_submit_button', 'Ro\'yxatdan o\'tish')
+                )}
+              </Button>
+            </form>
+
+            {/* Login sahifasiga o'tish */}
+            <div className="mt-6 text-center">
+              <p className="text-slate-600 dark:text-slate-400">
+                {t('register_already_have_account', 'Allaqachon hisobingiz bormi?')}{' '}
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-amber-500 hover:text-amber-600 font-medium"
+                >
+                  {t('register_sign_in', 'Tizimga kirish')}
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>

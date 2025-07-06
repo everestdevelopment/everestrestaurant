@@ -200,8 +200,10 @@ const AppRouter = () => {
               </Suspense>
             </ErrorBoundary>
           } />
-          <Route path="/profile" element={<Profile />} />
         </Route>
+        
+        {/* Profile route - accessible to all authenticated users */}
+        <Route path="/profile" element={<Profile />} />
       </Route>
 
       {/* Auth routes without Navbar/Footer */}

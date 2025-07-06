@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, Heart, ShoppingCart, LogOut, Shield, UtensilsCrossed, Mail } from 'lucide-react';
+import { Menu, X, User, Heart, ShoppingCart, LogOut, Shield, UtensilsCrossed, Mail, AlertCircle } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useShopping } from '@/context/ShoppingContext';
 import { Badge } from "@/components/ui/badge";
@@ -12,16 +12,34 @@ import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/api';
 import { getGlobalSocket, createSocketManager } from '@/lib/socket';
 import { useAdminNotifications } from '@/context/AdminNotificationContext';
+import { useToast } from '@/components/ui/use-toast';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { cartCount, likedCount } = useShopping();
-  const { user, logout } = useAuth();
+  const { user, logout, isProfileComplete, isNewUser } = useAuth();
   const { t } = useTranslation();
   const { unreadContactCount, updateUnreadCount } = useAdminNotifications();
   const [socket, setSocket] = useState(null);
+  const { toast } = useToast();
+
+  // Navigation blocking for incomplete profile
+  const handleNavigation = (path: string, e?: React.MouseEvent) => {
+    // Yangi foydalanuvchi (register qilgan) va profil to'liq emas
+    if (user && isNewUser() && !isProfileComplete() && path !== '/profile' && path !== '/logout') {
+      e?.preventDefault();
+      toast({
+        title: t('navigation_blocked_title', 'Profil to\'ldirilmagan'),
+        description: t('navigation_blocked_desc', 'Davom etish uchun avval profil ma\'lumotlarini to\'ldiring'),
+        variant: 'destructive',
+      });
+      navigate('/profile');
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -108,6 +126,7 @@ const Navbar = () => {
                   <li key={link.href}>
                     <NavLink
                       to={link.href}
+                      onClick={(e) => handleNavigation(link.href, e)}
                       className={({ isActive }) =>
                         cn(
                           'font-medium text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 px-4 py-2 flex items-center transition duration-150 ease-in-out',
@@ -124,6 +143,7 @@ const Navbar = () => {
                     <NavLink
                       to="/admin"
                       end
+                      onClick={(e) => handleNavigation('/admin', e)}
                       className={({ isActive }) =>
                         cn(
                           'font-medium text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 px-4 py-2 flex items-center transition duration-150 ease-in-out',
@@ -149,13 +169,13 @@ const Navbar = () => {
               <ThemeToggle />
               <LanguageSwitcher />
 
-              <Link to="/liked">
+              <Link to="/liked" onClick={(e) => handleNavigation('/liked', e)}>
                 <Button variant="ghost" size="icon" className="text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 relative">
                   <Heart className="w-5 h-5" />
                   {likedCount > 0 && <Badge className="absolute -top-1 -right-1 h-5 w-5 justify-center p-0">{likedCount}</Badge>}
                 </Button>
               </Link>
-              <Link to="/cart">
+              <Link to="/cart" onClick={(e) => handleNavigation('/cart', e)}>
                 <Button variant="ghost" size="icon" className="text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 relative">
                   <ShoppingCart className="w-5 h-5" />
                   {cartCount > 0 && <Badge className="absolute -top-1 -right-1 h-5 w-5 justify-center p-0">{cartCount}</Badge>}
@@ -167,8 +187,11 @@ const Navbar = () => {
               {user ? (
                 <>
                   <Link to="/profile">
-                    <Button variant="ghost" size="icon" className="text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400">
+                    <Button variant="ghost" size="icon" className="text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 relative">
                       <User className="w-5 h-5" />
+                      {!isProfileComplete() && (
+                        <AlertCircle className="w-3 h-3 absolute -top-1 -right-1 text-red-500" />
+                      )}
                     </Button>
                   </Link>
                   <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-600 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400">

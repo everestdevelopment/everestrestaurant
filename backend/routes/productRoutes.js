@@ -9,15 +9,8 @@ import {
   incrementViewCount
 } from '../controllers/productController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { uploadProductImage } from '../controllers/imagekitController.js';
-import fileUpload from 'express-fileupload';
 
 const router = express.Router();
-
-router.use(fileUpload());
-
-// ImageKit upload route (only this, no multer/local)
-router.post('/upload-image', protect, admin, uploadProductImage);
 
 router.route('/').get(getProducts).post(protect, admin, createProduct);
 router.route('/stats').get(protect, admin, getProductStats);

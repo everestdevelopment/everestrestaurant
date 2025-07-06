@@ -53,7 +53,7 @@ const Login = () => {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const response = await login(data.email, data.password, true);
+      const response = await login(data.email, data.password);
       toast({
         title: t('login_success_toast_title'),
         description: t('login_success_toast_description'),

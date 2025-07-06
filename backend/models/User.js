@@ -9,10 +9,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   isActive: { type: Boolean, default: true },
-  googleId: { type: String },
-  isGoogleAccount: { type: Boolean, default: false },
-  isEmailVerified: { type: Boolean, default: false },
-  emailVerificationCode: { type: String },
+  isEmailVerified: { type: Boolean, default: true },
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
