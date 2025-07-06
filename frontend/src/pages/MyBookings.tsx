@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency, getStatusText } from '@/lib/utils';
 import { Order } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 // Interfaces
 interface Order {
@@ -32,9 +34,10 @@ interface Reservation {
 
 const MyBookings = () => {
   const { t } = useTranslation();
+  const { user, loading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading: boolean] = useState(true);
 
   const fetchData = async () => {
     setLoading(true);
@@ -80,6 +83,9 @@ const MyBookings = () => {
     }
   };
   
+  if (loading) return <div>Yuklanmoqda...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />

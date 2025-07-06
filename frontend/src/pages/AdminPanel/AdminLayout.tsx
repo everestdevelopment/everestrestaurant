@@ -131,9 +131,8 @@ const AdminLayout = () => {
   // WebSocket connection for real-time updates
   useEffect(() => {
     if (user?.role === 'admin') {
-      // Use existing socket if available, otherwise create new one
       let socketManager = getGlobalSocket();
-      
+
       if (!socketManager) {
         socketManager = createSocketManager({
           url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000',
@@ -144,9 +143,17 @@ const AdminLayout = () => {
             name: user.name
           }
         });
+      } else {
+        // Auth ma'lumotlarini yangilash
+        socketManager.updateAuth({
+          token: user.token,
+          userId: user._id,
+          role: user.role,
+          name: user.name
+        });
       }
 
-      // Only connect if not already connected
+      // Faqat ulanmagan bo'lsa connect qilamiz
       if (!socketManager.isConnected()) {
         socketManager.connect()
           .then((socket) => {
@@ -198,49 +205,15 @@ const AdminLayout = () => {
               updateUnreadCount();
             });
           })
-          .catch((error) => {
-            console.error('❌ Failed to connect admin layout socket:', error);
+          .catch((e) => {
+            if (e.message !== 'Connection already in progress') {
+              console.error('❌ Failed to connect admin layout socket:', e);
+            }
           });
-      } else {
-        // Socket already connected, just add listeners
-        socketManager.on('new_reservation', (data) => {
-          console.log('Yangi rezervatsiya keldi:', data);
-          fetchNotifications();
-          updateUnreadCount();
-        });
-
-        socketManager.on('new_order', (data) => {
-          console.log('Yangi buyurtma keldi:', data);
-          fetchNotifications();
-          updateUnreadCount();
-        });
-
-        socketManager.on('reservation_cancelled', (data) => {
-          console.log('Rezervatsiya bekor qilindi:', data);
-          fetchNotifications();
-          updateUnreadCount();
-        });
-
-        socketManager.on('order_cancelled', (data) => {
-          console.log('Buyurtma bekor qilindi:', data);
-          fetchNotifications();
-          updateUnreadCount();
-        });
-
-        socketManager.on('payment_received', (data) => {
-          console.log('To\'lov qabul qilindi:', data);
-          fetchNotifications();
-          updateUnreadCount();
-        });
-
-        socketManager.on('new_contact_message', (data) => {
-          console.log('Yangi xabar keldi:', data);
-          fetchNotifications();
-          updateUnreadCount();
-        });
       }
     }
-  }, [user, fetchNotifications, updateUnreadCount]);
+    // eslint-disable-next-line
+  }, [user?._id]);
 
   // Fetch notifications on mount and set up interval
   useEffect(() => {

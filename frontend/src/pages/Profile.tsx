@@ -17,22 +17,6 @@ const Profile: React.FC = () => {
   const { user, updateUser, isNewUser, isProfileComplete, loading } = useAuth();
   const { toast } = useToast();
 
-  // Check authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-gray-400">Yuklanmoqda...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
   // Profile form state
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -309,6 +293,21 @@ const Profile: React.FC = () => {
 
   const status = getProfileCompletionStatus();
 
+  // Faqat hooklardan keyin shartli render
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-gray-400">Yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       <Navbar />
@@ -425,13 +424,7 @@ const Profile: React.FC = () => {
                       <Input
                         type="tel"
                         value={profileForm.phone}
-                        onChange={(e) => {
-                          // Faqat raqam va + belgisini qabul qilish
-                          const value = e.target.value;
-                          if (value === '' || /^\+998[0-9]*$/.test(value)) {
-                            setProfileForm({ ...profileForm, phone: value });
-                          }
-                        }}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                         placeholder={t('profile_phone_placeholder', '+998901234567')}
                         maxLength={13}
                       />

@@ -217,11 +217,13 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
               }}
               disabled={!product.isAvailable || (product.quantity !== undefined && product.quantity <= 0)}
             >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              {!product.isAvailable || (product.quantity !== undefined && product.quantity <= 0)
-                ? t('product_unavailable')
-                : t('menu_item_add_to_cart')
-              }
+              <ShoppingCart className="h-5 w-5" />
+              <span className="hidden sm:inline ml-2">
+                {!product.isAvailable || (product.quantity !== undefined && product.quantity <= 0)
+                  ? t('product_unavailable')
+                  : t('menu_item_add_to_cart')
+                }
+              </span>
             </Button>
             
             <Button

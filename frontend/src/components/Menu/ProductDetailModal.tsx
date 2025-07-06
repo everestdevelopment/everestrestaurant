@@ -17,7 +17,8 @@ import {
   UtensilsCrossed,
   TrendingUp,
   Award,
-  X
+  X,
+  Info
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { useShopping } from '@/context/ShoppingContext';
@@ -322,10 +323,22 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="mt-6">
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="description">{t('product_tab_description')}</TabsTrigger>
-              <TabsTrigger value="ingredients">{t('product_tab_ingredients')}</TabsTrigger>
-              <TabsTrigger value="preparation">{t('product_tab_preparation')}</TabsTrigger>
-              <TabsTrigger value="info">{t('product_tab_info')}</TabsTrigger>
+              <TabsTrigger value="description">
+                <Info className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">{t('product_tab_description')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="ingredients">
+                <UtensilsCrossed className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">{t('product_tab_ingredients')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="preparation">
+                <Flame className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">{t('product_tab_preparation')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="info">
+                <Package className="w-5 h-5 sm:mr-2" />
+                <span className="hidden sm:inline">{t('product_tab_info')}</span>
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="description" className="mt-4">

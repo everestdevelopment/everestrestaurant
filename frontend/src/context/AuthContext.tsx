@@ -112,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token);
     setError(null);
     setIsNewUser(false);
+    localStorage.setItem('token', token);
     localStorage.setItem('isNewUser', 'false');
   };
 

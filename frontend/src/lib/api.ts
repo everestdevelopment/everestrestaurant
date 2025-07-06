@@ -29,6 +29,12 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     clearTimeout(timeoutId);
 
     if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isNewUser');
+        window.location.href = '/login';
+        return;
+      }
       const error = await res.json().catch(() => ({ message: 'Unknown error' }));
       throw new Error(error.message || `HTTP error! status: ${res.status}`);
     }

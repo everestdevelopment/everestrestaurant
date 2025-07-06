@@ -69,24 +69,13 @@ const Register = () => {
         })
       });
 
-      if (response) {
-        // Avtomatik login qilish
-        const loginResponse = await apiFetch('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password
-          })
+      if (response && response.user && response.token) {
+        manualLogin(response.user, response.token);
+        toast({ 
+          title: t('register_success_toast_title', 'Ro\'yxatdan o\'tish muvaffaqiyatli!'), 
+          description: t('register_success_toast_description', 'Profil ma\'lumotlaringizni to\'ldiring.') 
         });
-
-        if (loginResponse && loginResponse.user && loginResponse.token) {
-          manualLogin(loginResponse.user, loginResponse.token);
-          toast({ 
-            title: t('register_success_toast_title', 'Ro\'yxatdan o\'tish muvaffaqiyatli!'), 
-            description: t('register_success_toast_description', 'Siz muvaffaqiyatli ro\'yxatdan o\'tdingiz. Iltimos, profil ma\'lumotlaringizni to\'ldiring.') 
-          });
-          navigate('/profile');
-        }
+        navigate('/profile');
       }
     } catch (error: any) {
       console.error('Register error:', error);
