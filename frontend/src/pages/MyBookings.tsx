@@ -37,7 +37,7 @@ const MyBookings = () => {
   const { user, loading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading: boolean] = useState(true);
+  const [loading, boolean] = useState(true);
 
   const fetchData = async () => {
     setLoading(true);

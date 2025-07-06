@@ -88,13 +88,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
         setUser(data.user);
         setToken(data.token);
         setIsNewUser(false);
         localStorage.setItem('token', data.token);
         localStorage.setItem('isNewUser', 'false');
-        return data;
+      return data;
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Login failed');
@@ -128,13 +128,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
         setUser(data.user);
         setToken(data.token);
         setIsNewUser(true);
-        localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.token);
         localStorage.setItem('isNewUser', 'true');
-        return data.user;
+      return data.user;
       } else {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Signup failed');
@@ -196,14 +196,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = {
-    user,
-    token,
+      user, 
+      token, 
     loading,
     error,
-    login,
+      login, 
     manualLogin,
-    signup,
-    logout,
+      signup, 
+      logout, 
     updateUser,
     isProfileComplete,
     getProfileCompletionStatus,
