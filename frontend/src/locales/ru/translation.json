@@ -250,12 +250,13 @@
   "register_already_have_account": "Уже есть аккаунт?",
   "register_login_link": "Войти",
   "register_form_submit_button": "Зарегистрироваться",
+  "register_form_submitting_button": "Вход...",
   "register_success_toast_title": "Регистрация успешна!",
   "register_success_toast_description": "Добро пожаловать в ресторан Эверест.",
   "register_fail_toast_title": "Ошибка регистрации",
   "register_fail_toast_description": "Пожалуйста, попробуйте снова.",
   "register_or": "или",
-
+  "register_with_google": "Зарегистрироваться через Google",
   "register_code_sent_title": "Код подтверждения отправлен!",
   "register_code_sent_desc": "Проверьте вашу почту и введите код.",
 
