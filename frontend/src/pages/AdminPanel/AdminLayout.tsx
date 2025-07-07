@@ -204,54 +204,69 @@ const AdminLayout = () => {
               fetchNotifications();
               updateUnreadCount();
             });
+
+            // Yangi mahsulot qo'shilganda
+            socketManager.on('new_product', (data) => {
+              console.log('Yangi mahsulot qo\'shildi:', data);
+              fetchNotifications();
+            });
+
+            // Mahsulot yangilanganda
+            socketManager.on('product_updated', (data) => {
+              console.log('Mahsulot yangilandi:', data);
+              fetchNotifications();
+            });
+
+            // Mahsulot o'chirilganda
+            socketManager.on('product_deleted', (data) => {
+              console.log('Mahsulot o\'chirildi:', data);
+              fetchNotifications();
+            });
+
           })
-          .catch((e) => {
-            if (e.message !== 'Connection already in progress') {
-              console.error('❌ Failed to connect admin layout socket:', e);
-            }
+          .catch((error) => {
+            console.error('❌ Failed to connect admin layout socket:', error);
           });
       }
-    }
-    // eslint-disable-next-line
-  }, [user?._id]);
 
-  // Fetch notifications on mount and set up interval
-  useEffect(() => {
-    fetchNotifications();
-    
-    // Refresh notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
+      // Initial fetch
+      fetchNotifications();
+
+      return () => {
+        // Cleanup
+      };
+    }
+  }, [user, updateUnreadCount]);
 
   // Clear notifications when visiting a section
   useEffect(() => {
-    const currentSection = navItems.find(item => item.to === location.pathname);
-    if (currentSection && dashboardNotifications[currentSection.notificationKey as keyof DashboardNotifications] > 0) {
-      clearNotifications(currentSection.notificationKey);
+    const currentPath = location.pathname;
+    const currentSection = currentPath.split('/')[2]; // /admin/section -> section
+    
+    if (currentSection && dashboardNotifications[currentSection as keyof DashboardNotifications] > 0) {
+      clearNotifications(currentSection);
     }
-  }, [location.pathname]);
+  }, [location.pathname, dashboardNotifications]);
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/login');
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'order_cancelled':
-      case 'reservation_cancelled':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'new_order':
-      case 'new_reservation':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-      case 'payment_received':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'contact_message':
-        return <MessageSquare className="w-4 h-4 text-blue-500" />;
+      case 'order':
+        return <ShoppingCart className="w-4 h-4" />;
+      case 'reservation':
+        return <Calendar className="w-4 h-4" />;
+      case 'payment':
+        return <CreditCard className="w-4 h-4" />;
+      case 'message':
+        return <MessageSquare className="w-4 h-4" />;
+      case 'product':
+        return <Package className="w-4 h-4" />;
       default:
-        return <Bell className="w-4 h-4 text-gray-500" />;
+        return <Bell className="w-4 h-4" />;
     }
   };
 
@@ -260,14 +275,14 @@ const AdminLayout = () => {
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
     
     if (diffInHours < 1) {
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-      return `${diffInMinutes} daqiqa oldin`;
+      return 'Hozir';
     } else if (diffInHours < 24) {
       return `${diffInHours} soat oldin`;
     } else {
       return date.toLocaleDateString('uz-UZ', {
+        year: 'numeric',
+        month: 'long',
         day: 'numeric',
-        month: 'short',
         hour: '2-digit',
         minute: '2-digit'
       });
@@ -278,27 +293,13 @@ const AdminLayout = () => {
     const groups: { [key: string]: any[] } = {};
     
     notifications.forEach(notification => {
-      const date = new Date(notification.timestamp);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+      const date = new Date(notification.createdAt);
+      const dateKey = date.toDateString();
       
-      let groupKey = '';
-      if (date.toDateString() === today.toDateString()) {
-        groupKey = 'Bugun';
-      } else if (date.toDateString() === yesterday.toDateString()) {
-        groupKey = 'Kecha';
-      } else {
-        groupKey = date.toLocaleDateString('uz-UZ', {
-          day: 'numeric',
-          month: 'long'
-        });
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
       }
-      
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(notification);
+      groups[dateKey].push(notification);
     });
     
     return groups;
@@ -309,9 +310,8 @@ const AdminLayout = () => {
       await apiFetch(`/admin/notifications/${notificationId}`, {
         method: 'DELETE'
       });
-      // Remove from local state
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      // Refresh notifications
+      updateUnreadCount();
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
@@ -319,12 +319,32 @@ const AdminLayout = () => {
 
   const isHome = location.pathname === '/admin';
 
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 mx-auto text-red-500 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Ruxsat yo'q
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Bu sahifaga kirish uchun admin huquqlari kerak
+          </p>
+          <Button onClick={() => navigate('/login')}>
+            Kirish sahifasiga qaytish
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 admin-layout">
       {/* Main Navbar */}
       <Navbar />
-      {/* Mobil hamburger tugmasi: Navbar pastida, o'ngda */}
-      <div className="md:hidden flex justify-end w-full mt-2 px-2 fixed top-16 right-0 z-50">
+      
+      {/* Mobile hamburger button: Navbar pastida, o'ngda */}
+      <div className="md:hidden flex justify-end w-full mt-2 px-2 fixed top-[66px] right-0 z-50">
         <Button
           variant="ghost"
           size="icon"
@@ -337,7 +357,7 @@ const AdminLayout = () => {
 
       {/* Admin Sidebar */}
       <aside className={cn(
-        "fixed top-20 left-0 z-40 w-64 h-[calc(100vh-5rem)] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out admin-sidebar",
+        "fixed top-[56px] left-0 z-40 w-64 h-[calc(100vh-56px)] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out admin-sidebar",
         sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         <div className="h-full flex flex-col">
@@ -350,7 +370,7 @@ const AdminLayout = () => {
                   {t('admin.sidebar.title')}
                 </span>
               </div>
-              
+
               {/* Notification Bell */}
               <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                 <PopoverTrigger asChild>
@@ -387,13 +407,15 @@ const AdminLayout = () => {
                             </div>
                             {groupNotifications.map((notification) => (
                               <div
-                                key={notification.id}
+                                key={notification._id}
                                 className={`p-3 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800 ${
                                   !notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
                                 }`}
                               >
                                 <div className="flex items-start gap-3">
-                                  {getNotificationIcon(notification.type)}
+                                  <div className="flex-shrink-0 mt-0.5">
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
                                       <p className="font-medium text-sm">{notification.title}</p>
@@ -407,7 +429,7 @@ const AdminLayout = () => {
                                           className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleDeleteNotification(notification.id);
+                                            handleDeleteNotification(notification._id);
                                           }}
                                         >
                                           <X className="w-3 h-3" />
@@ -416,7 +438,7 @@ const AdminLayout = () => {
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                      {formatNotificationDate(new Date(notification.timestamp))}
+                                      {formatNotificationDate(new Date(notification.createdAt))}
                                     </p>
                                   </div>
                                 </div>
@@ -502,13 +524,13 @@ const AdminLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="md:ml-64 pt-20 admin-content">
+      <div className="md:ml-64 pt-20 admin-content" style={{ marginBottom: 20 }}>
         <main
           className={
-            `min-h-[calc(100vh-5rem)] md:pt-0 pt-20 ` +
-            (!isHome ? ' pb-[75px] pt-[100px] md:pt-0 md:pb-0' : '')
+            `min-h-[calc(100vh-5rem)] md:pt-0 pt-0 ` +
+            (!isHome ? ' pb-[75px] md:pt-0 md:pb-0' : '')
           }
-          style={!isHome ? { paddingTop: 100, paddingBottom: 75 } : {}}
+          style={!isHome ? { paddingTop: 0, paddingBottom: 75 } : { paddingTop: 0 }}
         >
           <Outlet />
         </main>
@@ -516,6 +538,82 @@ const AdminLayout = () => {
 
       {/* Footer */}
       <Footer />
+
+      {/* Global Styles for Admin Pages */}
+      <style jsx global>{`
+        .admin-section {
+          @apply space-y-6;
+        }
+        
+        .admin-header {
+          @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4;
+        }
+        
+        .admin-title {
+          @apply text-2xl font-bold text-slate-800 dark:text-white;
+        }
+        
+        .admin-button {
+          @apply flex items-center;
+        }
+        
+        /* Admin Layout Styles */
+        .admin-layout {
+          @apply relative;
+        }
+        
+        .admin-sidebar {
+          @apply shadow-lg;
+        }
+        
+        .admin-content {
+          @apply transition-all duration-300;
+        }
+        
+        .admin-nav-item {
+          @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+        }
+        
+        .admin-nav-icon {
+          @apply w-4 h-4 mr-3;
+        }
+        
+        .admin-notification-badge {
+          @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center;
+        }
+        
+        /* Mobile responsive table */
+        @media (max-width: 768px) {
+          .admin-section table {
+            @apply text-xs;
+          }
+          
+          .admin-section th,
+          .admin-section td {
+            @apply px-2 py-2;
+          }
+          
+          .admin-section .overflow-x-auto {
+            @apply -mx-4;
+          }
+        }
+        
+        /* Mobile card layout for small screens */
+        @media (max-width: 640px) {
+          .admin-section .grid {
+            @apply grid-cols-1;
+          }
+          
+          .admin-section .space-y-4 {
+            @apply space-y-3;
+          }
+          
+          /* Mobile admin panel top spacing */
+          .admin-content main {
+            @apply pt-[150px];
+          }
+        }
+      `}</style>
     </div>
   );
 };

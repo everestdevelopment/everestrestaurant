@@ -51,7 +51,27 @@ class SocketManager {
       }
 
       if (this.isConnecting) {
-        reject(new Error('Connection already in progress'));
+        // Instead of rejecting, wait for the existing connection
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds timeout (50 * 100ms)
+        
+        const checkConnection = () => {
+          attempts++;
+          if (this.socket?.connected) {
+            resolve(this.socket);
+          } else if (!this.isConnecting) {
+            // Connection attempt failed, try again
+            this.connect().then(resolve).catch(reject);
+          } else if (attempts >= maxAttempts) {
+            // Timeout reached
+            this.isConnecting = false;
+            reject(new Error('Connection timeout - connection already in progress'));
+          } else {
+            // Still connecting, check again in 100ms
+            setTimeout(checkConnection, 100);
+          }
+        };
+        checkConnection();
         return;
       }
 

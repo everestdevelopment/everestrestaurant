@@ -58,32 +58,52 @@ const Navbar = () => {
         });
       }
 
-      // Only connect if not already connected
-      if (!socketManager.isConnected()) {
-        socketManager.connect()
-          .then((socket) => {
-            setSocket(socket);
-            console.log('✅ Navbar socket connected');
-
-            // Yangi xabar kelganda
-            socketManager.on('new_contact_message', (data) => {
-              updateUnreadCount();
-            });
-
-            // Dastlabki sonni olish
-            updateUnreadCount();
-          })
-          .catch((error) => {
-            console.error('❌ Failed to connect navbar socket:', error);
-          });
-      } else {
+      // Check if already connected or connecting
+      if (socketManager.isConnected()) {
         // Socket already connected, just add listeners
         socketManager.on('new_contact_message', (data) => {
           updateUnreadCount();
         });
         updateUnreadCount();
+        setSocket(socketManager.getSocket());
+      } else {
+        // Connect only if not already connecting
+        const connectWithRetry = (retryCount = 0) => {
+          socketManager.connect()
+            .then((socket) => {
+              setSocket(socket);
+              console.log('✅ Navbar socket connected');
+
+              // Yangi xabar kelganda
+              socketManager.on('new_contact_message', (data) => {
+                updateUnreadCount();
+              });
+
+              // Dastlabki sonni olish
+              updateUnreadCount();
+            })
+            .catch((error) => {
+              console.error('❌ Failed to connect navbar socket:', error);
+              
+              // Retry once if it's a connection in progress error
+              if (error.message.includes('Connection already in progress') && retryCount < 1) {
+                console.log('🔄 Retrying socket connection...');
+                setTimeout(() => connectWithRetry(retryCount + 1), 1000);
+              }
+            });
+        };
+        
+        connectWithRetry();
       }
     }
+
+    // Cleanup function to remove event listeners
+    return () => {
+      const socketManager = getGlobalSocket();
+      if (socketManager) {
+        socketManager.off('new_contact_message');
+      }
+    };
   }, [user, updateUnreadCount]);
 
   const handleLogout = async () => {
@@ -218,3 +238,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

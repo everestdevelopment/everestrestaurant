@@ -274,104 +274,219 @@ const AdminReservations: React.FC = () => {
       ) : filteredReservations.length === 0 ? (
         <div className="text-center py-8 text-gray-500">{t('admin.reservations.noReservations')}</div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.reservation')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.customer')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.dateTime')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.guests')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.price')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.status')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.actions')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                {filteredReservations.map((reservation) => (
-                  <tr key={reservation._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        #{reservation._id.slice(-6)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{reservation.name}</div>
-                      <div className="text-sm text-gray-500">{reservation.email}</div>
-                      <div className="text-sm text-gray-500">{reservation.phone}</div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {new Date(reservation.date).toLocaleDateString('uz-UZ')}
-                      </div>
-                      <div className="text-sm text-gray-500">{reservation.time}</div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900 dark:text-white">
-                        <Users className="w-4 h-4 mr-1" />
-                        {reservation.guests} {t('admin.reservations.people')}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(reservation.totalPrice)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {reservation.isPaid ? t('admin.reservations.paid') : t('admin.reservations.unpaid')}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      {getStatusBadge(reservation.status)}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openReservationDetails(reservation)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        
-                        {reservation.status !== 'Cancelled' && (
-                          <StatusManager
-                            currentStatus={reservation.status}
-                            statusOptions={statusOptions}
-                            onStatusChange={(newStatus, note) => handleStatusUpdate(reservation._id, newStatus, note)}
-                            isLoading={updatingStatus === reservation._id}
-                          />
-                        )}
-                        
-                        {reservation.status === 'Cancelled' && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                <Trash className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>{t('admin.reservations.deleteReservation')}</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {t('admin.reservations.deleteConfirm')}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>{t('admin.reservations.cancel')}</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteReservation(reservation._id)}>
-                                  {t('admin.reservations.delete')}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </div>
-                    </td>
+        <div className="space-y-4">
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-slate-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.reservation')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.customer')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.dateTime')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.guests')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.price')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.status')}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.reservations.actions')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                  {filteredReservations.map((reservation) => (
+                    <tr key={reservation._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          #{reservation._id.slice(-6)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 dark:text-white">{reservation.name}</div>
+                        <div className="text-sm text-gray-500">{reservation.email}</div>
+                        <div className="text-sm text-gray-500">{reservation.phone}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {new Date(reservation.date).toLocaleDateString('uz-UZ')}
+                        </div>
+                        <div className="text-sm text-gray-500">{reservation.time}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center text-sm text-gray-900 dark:text-white">
+                          <Users className="w-4 h-4 mr-1" />
+                          {reservation.guests} {t('admin.reservations.people')}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatCurrency(reservation.totalPrice)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {reservation.isPaid ? t('admin.reservations.paid') : t('admin.reservations.unpaid')}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {getStatusBadge(reservation.status)}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openReservationDetails(reservation)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          
+                          {reservation.status !== 'Cancelled' && (
+                            <StatusManager
+                              currentStatus={reservation.status}
+                              statusOptions={statusOptions}
+                              onStatusChange={(newStatus, note) => handleStatusUpdate(reservation._id, newStatus, note)}
+                              isLoading={updatingStatus === reservation._id}
+                            />
+                          )}
+                          
+                          {reservation.status === 'Cancelled' && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                                  <Trash className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t('admin.reservations.deleteReservation')}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t('admin.reservations.deleteConfirm')}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t('admin.reservations.cancel')}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteReservation(reservation._id)}>
+                                    {t('admin.reservations.delete')}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredReservations.map((reservation) => (
+              <div key={reservation._id} className="bg-white dark:bg-slate-800 rounded-lg border p-4 space-y-3">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white">
+                      #{reservation._id.slice(-6)}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(reservation.date).toLocaleDateString('uz-UZ')} • {reservation.time}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {getStatusBadge(reservation.status)}
+                    <div className={`w-2 h-2 rounded-full ${
+                      reservation.isPaid ? 'bg-green-500' : 'bg-red-500'
+                    }`} />
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                    {reservation.name}
+                  </h4>
+                  <p className="text-sm text-gray-500">{reservation.email}</p>
+                  <p className="text-sm text-gray-500">{reservation.phone}</p>
+                </div>
+
+                {/* Reservation Details */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <Users className="w-4 h-4 mr-1" />
+                      {reservation.guests} {t('admin.reservations.people')}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {reservation.isPaid ? t('admin.reservations.paid') : t('admin.reservations.unpaid')}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(reservation.totalPrice)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {reservation.notes && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      {reservation.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-slate-700">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openReservationDetails(reservation)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    
+                    {reservation.status !== 'Cancelled' && (
+                      <StatusManager
+                        currentStatus={reservation.status}
+                        statusOptions={statusOptions}
+                        onStatusChange={(newStatus, note) => handleStatusUpdate(reservation._id, newStatus, note)}
+                        isLoading={updatingStatus === reservation._id}
+                      />
+                    )}
+                  </div>
+                  
+                  {reservation.status === 'Cancelled' && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t('admin.reservations.deleteReservation')}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t('admin.reservations.deleteConfirm')}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t('admin.reservations.cancel')}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteReservation(reservation._id)}>
+                            {t('admin.reservations.delete')}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -380,34 +495,34 @@ const AdminReservations: React.FC = () => {
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t('admin.reservations.reservationDetails')}</DialogTitle>
+            <DialogTitle>Bron tafsilotlari</DialogTitle>
           </DialogHeader>
           {selectedReservation && (
             <div className="space-y-6">
               {/* Reservation Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-semibold mb-2">{t('admin.reservations.reservationInfo')}</h3>
+                  <h3 className="font-semibold mb-2">Bron maʼlumotlari</h3>
                   <div className="space-y-1 text-sm">
                     <p><strong>ID:</strong> #{selectedReservation._id.slice(-6)}</p>
                     <p><strong>{t('admin.reservations.status')}:</strong> {getStatusBadge(selectedReservation.status)}</p>
                     <p><strong>{t('admin.reservations.date')}:</strong> {new Date(selectedReservation.date).toLocaleDateString('uz-UZ')}</p>
                     <p><strong>{t('admin.reservations.time')}:</strong> {selectedReservation.time}</p>
-                    <p><strong>{t('admin.reservations.guests')}:</strong> {selectedReservation.guests} {t('admin.reservations.people')}</p>
-                    <p><strong>{t('admin.reservations.payment')}:</strong> {selectedReservation.isPaid ? t('admin.reservations.paid') : t('admin.reservations.unpaid')}</p>
+                    <p><strong>Mehmonlar soni:</strong> {selectedReservation.guests} kishi</p>
+                    <p><strong>To‘lov holati:</strong> {selectedReservation.isPaid ? 'To‘langan' : 'To‘lanmagan'}</p>
                     {selectedReservation.cancellationReason && (
-                      <p><strong>{t('admin.reservations.cancellationReason')}:</strong> {selectedReservation.cancellationReason}</p>
+                      <p><strong>Bekor qilish sababi:</strong> {selectedReservation.cancellationReason}</p>
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-2">{t('admin.reservations.customerInfo')}</h3>
+                  <h3 className="font-semibold mb-2">Mijoz maʼlumotlari</h3>
                   <div className="space-y-1 text-sm">
-                    <p><strong>{t('admin.reservations.name')}:</strong> {selectedReservation.name}</p>
-                    <p><strong>{t('admin.reservations.email')}:</strong> {selectedReservation.email}</p>
-                    <p><strong>{t('admin.reservations.phone')}:</strong> {selectedReservation.phone}</p>
+                    <p><strong>Ism:</strong> {selectedReservation.name}</p>
+                    <p><strong>Email:</strong> {selectedReservation.email}</p>
+                    <p><strong>Telefon:</strong> {selectedReservation.phone}</p>
                     {selectedReservation.user && (
-                      <p><strong>{t('admin.reservations.registered')}:</strong> Ha</p>
+                      <p><strong>Ro‘yxatdan o‘tgan:</strong> Ha</p>
                     )}
                   </div>
                 </div>
@@ -416,7 +531,7 @@ const AdminReservations: React.FC = () => {
               {/* Notes */}
               {selectedReservation.notes && (
                 <div>
-                  <h3 className="font-semibold mb-2">{t('admin.reservations.notes')}</h3>
+                  <h3 className="font-semibold mb-2">Izoh</h3>
                   <div className="p-3 bg-gray-50 dark:bg-slate-700 rounded">
                     <p className="text-sm">{selectedReservation.notes}</p>
                   </div>
@@ -425,27 +540,27 @@ const AdminReservations: React.FC = () => {
 
               {/* Payment Details */}
               <div>
-                <h3 className="font-semibold mb-2">{t('admin.reservations.paymentInfo')}</h3>
+                <h3 className="font-semibold mb-2">To‘lov maʼlumotlari</h3>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span>{t('admin.reservations.pricePerGuest')}:</span>
+                    <span>Har bir mehmon uchun narx:</span>
                     <span>{formatCurrency(selectedReservation.pricePerGuest)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>{t('admin.reservations.guests')}:</span>
-                    <span>{selectedReservation.guests} {t('admin.reservations.people')}</span>
+                    <span>Mehmonlar soni:</span>
+                    <span>{selectedReservation.guests} kishi</span>
                   </div>
                   <div className="flex justify-between font-semibold border-t pt-1">
-                    <span>{t('admin.reservations.total')}:</span>
+                    <span>Jami:</span>
                     <span>{formatCurrency(selectedReservation.totalPrice)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>{t('admin.reservations.paymentMethod')}:</span>
+                    <span>To‘lov usuli:</span>
                     <span>{selectedReservation.paymentMethod}</span>
                   </div>
                   {selectedReservation.paidAt && (
                     <div className="flex justify-between">
-                      <span>{t('admin.reservations.paidAt')}:</span>
+                      <span>To‘langan vaqti:</span>
                       <span>{formatDate(selectedReservation.paidAt)}</span>
                     </div>
                   )}
@@ -457,7 +572,7 @@ const AdminReservations: React.FC = () => {
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center">
                     <History className="w-4 h-4 mr-2" />
-                    {t('admin.reservations.statusHistory')}
+                    Holatlar tarixi
                   </h3>
                   <div className="space-y-2">
                     {selectedReservation.statusHistory.slice().reverse().map((history, index) => (
