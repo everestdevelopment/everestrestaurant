@@ -19,7 +19,6 @@ const Register = () => {
 
   const [step, setStep] = useState<'form' | 'verify' | 'set-password'>('form');
   const [manualData, setManualData] = useState({ name: '', email: '', password: '' });
-  const [googleUserData, setGoogleUserData] = useState<any>(null); // { name, email, googleId }
   const [verifyEmail, setVerifyEmail] = useState('');
   const [isManual, setIsManual] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,7 @@ const Register = () => {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     try {
-      const res = await fetch('/api/auth/signup/manual', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -56,14 +55,6 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Step 1: Google signup
-  const handleGoogleSignup = async () => {
-    // Open Google OAuth window
-    window.location.href = '/api/auth/google';
-    // After OAuth, backend should redirect to /verify with tempData param
-    // You need to handle this in your OAuth callback and frontend routing
   };
 
   // Step 2: Verify code
@@ -135,11 +126,15 @@ const Register = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>{loading ? t('register_form_submitting_button') : t('register_form_submit_button')}</Button>
                 </form>
-                <div className="my-6 text-center text-gray-500">{t('register_or')}</div>
-                <Button type="button" className="w-full flex items-center justify-center gap-2" onClick={handleGoogleSignup}>
-                  <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5" />
-                  {t('register_with_google')}
-                </Button>
+                <div className="mt-6 text-center text-sm">
+                  <span className="text-gray-400">{t('register_have_account')}</span>
+                  <span
+                    className="ml-1 text-yellow-500 font-semibold cursor-pointer hover:underline"
+                    onClick={() => navigate('/login')}
+                  >
+                    {t('register_login')}
+                  </span>
+                </div>
               </>
             )}
             {step === 'verify' && (

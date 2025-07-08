@@ -230,7 +230,8 @@
 
   "register_title": "Регистрация",
   "register_description": "Создайте аккаунт, чтобы пользоваться всеми возможностями.",
-  "register_has_account": "У вас есть учетная запись?",
+  "register_have_account": "Уже есть аккаунт?",
+  "register_login": "Войти",
   "register_sign_in": "Войти",
   "register_form_name": "Имя",
   "register_form_name_placeholder": "Ваше имя",
@@ -259,6 +260,8 @@
   "register_with_google": "Зарегистрироваться через Google",
   "register_code_sent_title": "Код подтверждения отправлен!",
   "register_code_sent_desc": "Проверьте вашу почту и введите код.",
+  "register_no_account": "Нет аккаунта?",
+  "register_create_account": "Создать аккаунт",
 
   "cart_empty_title": "Корзина пуста",
   "cart_empty_desc": "В вашей корзине пока нет товаров. Перейдите в меню и выберите вкусные блюда!",

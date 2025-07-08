@@ -1979,5 +1979,9 @@
   "admin.close": "Yopish",
   "admin.confirm": "Tasdiqlash",
   "admin.details": "Tafsilotlar",
-  "admin.note": "Izoh"
+  "admin.note": "Izoh",
+  "register_no_account": "Hisobingiz yo'qmi?",
+  "register_create_account": "Hisob yarating",
+  "register_have_account": "Hisobingiz bormi?",
+  "register_login": "Kirish"
 } 

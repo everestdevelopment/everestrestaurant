@@ -1723,5 +1723,9 @@
   "admin.close": "Close",
   "admin.confirm": "Confirm",
   "admin.details": "Details",
-  "admin.note": "Note"
+  "admin.note": "Note",
+  "register_no_account": "Don't have an account?",
+  "register_create_account": "Create account",
+  "register_have_account": "Already have an account?",
+  "register_login": "Login"
 } 
