@@ -253,12 +253,15 @@ class SocketManager {
   }
 }
 
+// WebSocket URL ni .env dan olamiz, yo'q bo'lsa prod uchun default qiymat
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://everestrestaurantglobalcookmail.onrender.com';
+
 // Create singleton instance
 let socketManager: SocketManager | null = null;
 
 export const createSocketManager = (config: SocketConfig): SocketManager => {
   if (!socketManager) {
-    socketManager = new SocketManager(config);
+    socketManager = new SocketManager({ url: SOCKET_URL, ...config });
   } else {
     // Update auth if socket already exists
     socketManager.updateAuth(config.auth || {});
