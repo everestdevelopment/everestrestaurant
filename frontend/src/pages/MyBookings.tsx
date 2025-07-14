@@ -92,7 +92,7 @@ const MyBookings = () => {
   
   if (loading) return <div>Yuklanmoqda...</div>;
   if (!user) return <Navigate to="/login" replace />;
-
+  
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />

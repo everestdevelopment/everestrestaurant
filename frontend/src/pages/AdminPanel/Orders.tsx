@@ -294,98 +294,98 @@ const AdminOrders: React.FC = () => {
         <div className="space-y-4">
           {/* Desktop Table View */}
           <div className="hidden md:block bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-slate-700">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.order', 'Buyurtma')}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.customer', 'Mijoz')}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.products', 'Mahsulotlar')}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.price', 'Narx')}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.status', 'Status')}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.date', 'Sana')}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.actions', 'Amallar')}</th>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.order', 'Buyurtma')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.customer', 'Mijoz')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.products', 'Mahsulotlar')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.price', 'Narx')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.status', 'Status')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.date', 'Sana')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.orders.actions', 'Amallar')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                {filteredOrders.map((order) => (
+                  <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        #{order._id.slice(-6)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">{order.shippingAddress.fullName}</div>
+                      <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {order.orderItems.length} {t('admin.orders.productsCount', 'ta mahsulot')}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(order.totalPrice)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {order.isPaid ? t('admin.orders.paid', 'To\'langan') : t('admin.orders.unpaid', 'To\'lanmagan')}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {getStatusBadge(order.status)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openOrderDetails(order)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        
+                        {order.status !== 'Cancelled' && (
+                          <StatusManager
+                            currentStatus={order.status}
+                            statusOptions={statusOptions}
+                            onStatusChange={(newStatus, note) => handleStatusUpdate(order._id, newStatus, note)}
+                            isLoading={updatingStatus === order._id}
+                          />
+                        )}
+                        
+                        {order.status === 'Cancelled' && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('admin.orders.deleteOrder', 'Buyurtmani o\'chirish')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('admin.orders.deleteConfirm', 'Bu buyurtmani o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.')}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('admin.orders.cancel', 'Bekor qilish')}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteOrder(order._id)}>
+                                  {t('admin.orders.delete', 'O\'chirish')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                  {filteredOrders.map((order) => (
-                    <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          #{order._id.slice(-6)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">{order.shippingAddress.fullName}</div>
-                        <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {order.orderItems.length} {t('admin.orders.productsCount', 'ta mahsulot')}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {formatCurrency(order.totalPrice)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {order.isPaid ? t('admin.orders.paid', 'To\'langan') : t('admin.orders.unpaid', 'To\'lanmagan')}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        {getStatusBadge(order.status)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(order.createdAt)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openOrderDetails(order)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          
-                          {order.status !== 'Cancelled' && (
-                            <StatusManager
-                              currentStatus={order.status}
-                              statusOptions={statusOptions}
-                              onStatusChange={(newStatus, note) => handleStatusUpdate(order._id, newStatus, note)}
-                              isLoading={updatingStatus === order._id}
-                            />
-                          )}
-                          
-                          {order.status === 'Cancelled' && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                  <Trash className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>{t('admin.orders.deleteOrder', 'Buyurtmani o\'chirish')}</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    {t('admin.orders.deleteConfirm', 'Bu buyurtmani o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.')}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>{t('admin.orders.cancel', 'Bekor qilish')}</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteOrder(order._id)}>
-                                    {t('admin.orders.delete', 'O\'chirish')}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
             </div>
           </div>
 

@@ -17,6 +17,13 @@ const pendingPasswordResets = new Map();
 export const signup = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
+  // Admin email va parolni bloklash
+  const hardcodedAdminEmail = "everestdevelopment@gmail.com";
+  if (email === hardcodedAdminEmail) {
+    res.status(403);
+    throw new Error('Admin uchun ro\'yxatdan o\'tish taqiqlangan');
+  }
+
   // Validatsiya
   if (!name || !email || !password) {
     res.status(400);
@@ -45,7 +52,7 @@ export const signup = asyncHandler(async (req, res) => {
     name,
     email: email.toLowerCase(),
     password,
-    role: 'user',
+    role: 'user', // faqat user bo'lib yaratiladi
     isEmailVerified: true,
   });
 
@@ -72,7 +79,7 @@ export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // --- Hardcoded Admin Check ---
-  const hardcodedAdminEmail = "everestrestaurantcook@gmail.com";
+  const hardcodedAdminEmail = "everestdevelopment@gmail.com";
   const hardcodedAdminPassword = "12345678!@WEB";
 
   if (email === hardcodedAdminEmail && password === hardcodedAdminPassword) {

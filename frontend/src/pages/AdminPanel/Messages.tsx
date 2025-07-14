@@ -344,18 +344,18 @@ const AdminMessages: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">{t('admin.messages.status', 'Holat')}</label>
-            <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+          <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
               <SelectTrigger>
                 <SelectValue placeholder={t('admin.messages.allStatuses', 'Barcha holatlar')} />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           </div>
         </div>
       </div>
@@ -370,7 +370,7 @@ const AdminMessages: React.FC = () => {
       ) : filteredMessages.length === 0 ? (
         <div className="text-center py-8 text-gray-500">{t('admin.messages.noMessages', 'Xabarlar topilmadi')}</div>
       ) : (
-        <div className="space-y-4">
+          <div className="space-y-4">
           {/* Desktop Table View */}
           <div className="hidden md:block bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
@@ -485,28 +485,28 @@ const AdminMessages: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-1">
-                    {getStatusBadge(message.status)}
-                    {!message.read && (
-                      <Badge variant="destructive" className="text-xs">
-                        Yangi
-                      </Badge>
-                    )}
-                  </div>
+                      {getStatusBadge(message.status)}
+                      {!message.read && (
+                        <Badge variant="destructive" className="text-xs">
+                          Yangi
+                        </Badge>
+                      )}
+                    </div>
                 </div>
 
                 {/* Message Preview */}
                 <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
                   <p className="text-sm text-gray-900 dark:text-white line-clamp-3">
                     {message.message}
-                  </p>
+                    </p>
                 </div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-slate-700">
                   <div className="text-xs text-gray-500">
-                    {formatDate(message.createdAt)}
-                  </div>
-                  <div className="flex items-center space-x-2">
+                      {formatDate(message.createdAt)}
+                </div>
+                <div className="flex items-center space-x-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -519,37 +519,37 @@ const AdminMessages: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => openReply(message)}
+                      onClick={() => openReply(message)}
                         className="h-8 w-8 p-0"
-                      >
+                    >
                         <Reply className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    </Button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                         >
                           <Trash className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
                           <AlertDialogTitle>{t('admin.messages.deleteMessage', 'Xabarni o\'chirish')}</AlertDialogTitle>
-                          <AlertDialogDescription>
+                        <AlertDialogDescription>
                             {t('admin.messages.deleteConfirm', 'Bu xabarni o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.')}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
                           <AlertDialogCancel>{t('admin.messages.cancel', 'Bekor qilish')}</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(message._id)}>
+                        <AlertDialogAction onClick={() => handleDelete(message._id)}>
                             {t('admin.messages.delete', 'O\'chirish')}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   </div>
                 </div>
               </div>
@@ -618,14 +618,14 @@ const AdminMessages: React.FC = () => {
                         <div className="flex-1">
                           <span className="text-sm text-green-600 dark:text-green-400">{notification.message}</span>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-slate-500">
-                              {formatDate(notification.sentAt)}
-                            </span>
-                            {!notification.sent && (
-                              <Badge variant="secondary" className="text-xs">
-                                Yangi
-                              </Badge>
-                            )}
+                        <span className="text-xs text-slate-500">
+                          {formatDate(notification.sentAt)}
+                        </span>
+                        {!notification.sent && (
+                          <Badge variant="secondary" className="text-xs">
+                            Yangi
+                          </Badge>
+                        )}
                           </div>
                         </div>
                       </div>

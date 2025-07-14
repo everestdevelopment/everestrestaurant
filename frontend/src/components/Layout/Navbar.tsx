@@ -69,21 +69,21 @@ const Navbar = () => {
       } else {
         // Connect only if not already connecting
         const connectWithRetry = (retryCount = 0) => {
-          socketManager.connect()
-            .then((socket) => {
-              setSocket(socket);
-              console.log('✅ Navbar socket connected');
+        socketManager.connect()
+          .then((socket) => {
+            setSocket(socket);
+            console.log('✅ Navbar socket connected');
 
-              // Yangi xabar kelganda
-              socketManager.on('new_contact_message', (data) => {
-                updateUnreadCount();
-              });
-
-              // Dastlabki sonni olish
+            // Yangi xabar kelganda
+            socketManager.on('new_contact_message', (data) => {
               updateUnreadCount();
-            })
-            .catch((error) => {
-              console.error('❌ Failed to connect navbar socket:', error);
+            });
+
+            // Dastlabki sonni olish
+            updateUnreadCount();
+          })
+          .catch((error) => {
+            console.error('❌ Failed to connect navbar socket:', error);
               
               // Retry once if it's a connection in progress error
               if (error.message.includes('Connection already in progress') && retryCount < 1) {
