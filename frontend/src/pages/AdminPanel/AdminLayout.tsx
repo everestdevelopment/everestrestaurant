@@ -540,7 +540,7 @@ const AdminLayout = () => {
       <Footer />
 
       {/* Global Styles for Admin Pages */}
-      <style jsx global>{`
+      <style>{`
         .admin-section {
           @apply space-y-6;
         }

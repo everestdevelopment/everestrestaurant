@@ -24,8 +24,20 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
   const { addToCart } = useShopping();
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const productName = product.nameKey ? t(product.nameKey) : product.name;
-  const productDescription = product.descriptionKey ? t(product.descriptionKey) : product.description;
+  const { i18n } = useTranslation();
+  const lang = i18n.language || 'uz';
+  const productName =
+    product[`name_${lang}`] ||
+    product.name_uz ||
+    product.name_ru ||
+    product.name_en ||
+    '';
+  const productDescription =
+    product[`description_${lang}`] ||
+    product.description_uz ||
+    product.description_ru ||
+    product.description_en ||
+    '';
 
   // Helper function to normalize category names
   const normalizeCategory = (category: string) => {
@@ -170,8 +182,9 @@ const MenuItemCard = ({ product, isLiked, onToggleLike, onAddToCart, extraBottom
           <div className="flex-grow">
             <div className="hover:text-blue-600 transition-colors">
               <h3 className="text-sm sm:text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-1">{productName}</h3>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mb-3 sm:mb-4 h-8 sm:h-10 line-clamp-2">{productDescription}</p>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mb-3 sm:mb-4 h-8 sm:h-10 line-clamp-2">{productDescription}</p>
+            {/* Remove the productDescription and any <p> or elements that show the description or extra info. Only show product name, price, image, availability, and add to cart button. */}
           </div>
           
           <div className="flex justify-between items-center mt-3 sm:mt-4">

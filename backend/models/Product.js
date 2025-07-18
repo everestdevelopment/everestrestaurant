@@ -3,14 +3,20 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 
 const productSchema = new mongoose.Schema({
   // Asosiy ma'lumotlar
+  name_uz: { type: String, required: false, trim: true },
+  name_ru: { type: String, required: false, trim: true },
+  name_en: { type: String, required: false, trim: true },
+  description_uz: { type: String, required: false },
+  description_ru: { type: String, required: false },
+  description_en: { type: String, required: false },
   nameKey: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
   },
   descriptionKey: {
     type: String,
-    required: true,
+    required: false,
   },
   price: { type: Number, required: true },
   image: { type: String, required: true },

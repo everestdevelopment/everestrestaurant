@@ -41,7 +41,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   isLiked,
   onToggleLike
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { addToCart } = useShopping();
   
   const [selectedType, setSelectedType] = useState<number>(0);
@@ -111,8 +111,19 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!product) return null;
 
-  const productName = product.nameKey ? t(product.nameKey) : product.name;
-  const productDescription = product.descriptionKey ? t(product.descriptionKey) : product.description;
+  const lang = i18n.language || 'uz';
+  const productName =
+    product[`name_${lang}`] ||
+    product.name_uz ||
+    product.name_ru ||
+    product.name_en ||
+    '';
+  const productDescription =
+    product[`description_${lang}`] ||
+    product.description_uz ||
+    product.description_ru ||
+    product.description_en ||
+    '';
   const currentPrice = product.types && product.types.length > 0 
     ? product.types[selectedType].price 
     : product.price;
@@ -303,12 +314,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
             {/* Qo'shimcha ma'lumotlar */}
             <div className="grid grid-cols-2 gap-4 text-sm">
-              {product.preparationTime && (
-                <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span>{t('product_preparation_time')}: {product.preparationTime} min</span>
-                </div>
-              )}
               {product.calories && (
                 <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400">
                   <Flame className="w-4 h-4" />
@@ -317,151 +322,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               )}
             </div>
           </div>
-        </div>
-
-        {/* Batafsil ma'lumotlar */}
-        <div className="mt-6">
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="description">
-                <Info className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">{t('product_tab_description')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="ingredients">
-                <UtensilsCrossed className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">{t('product_tab_ingredients')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="preparation">
-                <Flame className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">{t('product_tab_preparation')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="info">
-                <Package className="w-5 h-5 sm:mr-2" />
-                <span className="hidden sm:inline">{t('product_tab_info')}</span>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="description" className="mt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-                    {t('product_full_description')}
-                  </h3>
-                  <p className="text-slate-600 dark:text-gray-400 leading-relaxed">
-                    {product.fullDescription || productDescription}
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="ingredients" className="mt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-                    {t('product_ingredients')}
-                  </h3>
-                  {product.ingredients && product.ingredients.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {product.ingredients.map((ingredient, index) => (
-                        <div key={index} className="flex items-start gap-2">
-                          <UtensilsCrossed className="w-4 h-4 text-slate-400 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium text-slate-800 dark:text-white text-sm">
-                              {ingredient.name}
-                            </h4>
-                            {ingredient.description && (
-                              <p className="text-xs text-slate-600 dark:text-gray-400">
-                                {ingredient.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-slate-600 dark:text-gray-400">
-                      {t('product_no_ingredients')}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="preparation" className="mt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-                    {t('product_preparation_method')}
-                  </h3>
-                  {product.preparationMethod ? (
-                    <p className="text-slate-600 dark:text-gray-400 leading-relaxed">
-                      {product.preparationMethod}
-                    </p>
-                  ) : (
-                    <p className="text-slate-600 dark:text-gray-400">
-                      {t('product_no_preparation_method')}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="info" className="mt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-                    {t('product_additional_info')}
-                  </h3>
-                  <div className="space-y-3">
-                    {product.allergens && product.allergens.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-slate-800 dark:text-white mb-2 text-sm">
-                          {t('product_allergens')}:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {product.allergens.map((allergen, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {t(`allergen_${allergen}`)}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {product.tags && product.tags.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-slate-800 dark:text-white mb-2 text-sm">
-                          {t('product_tags')}:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {product.tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {t(`tag_${tag}`)}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Eye className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-600 dark:text-gray-400">
-                          {t('product_view_count')}: {product.viewCount || 0}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ShoppingCart className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-600 dark:text-gray-400">
-                          {t('product_order_count')}: {product.orderCount || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
         </div>
       </DialogContent>
     </Dialog>

@@ -289,7 +289,7 @@ const AdminMessages: React.FC = () => {
         <h1 className="admin-title">{t('admin.messages.title', 'Xabarlar')}</h1>
         <Button onClick={fetchMessages} disabled={loading} variant="outline" size="sm" className="admin-button">
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          {t('admin.messages.refresh', 'Yangilash')}
+          {t('admin.messages.refresh', 'Refresh')}
         </Button>
       </div>
 

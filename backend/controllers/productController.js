@@ -79,8 +79,8 @@ export const incrementViewCount = asyncHandler(async (req, res) => {
 // POST /api/products (admin only)
 export const createProduct = asyncHandler(async (req, res) => {
   const {
-    nameKey,
-    descriptionKey,
+    name_uz, name_ru, name_en,
+    description_uz, description_ru, description_en,
     price,
     image,
     category,
@@ -100,9 +100,19 @@ export const createProduct = asyncHandler(async (req, res) => {
     metaDescription
   } = req.body;
 
+  // At least one language must be present
+  if (!name_uz && !name_ru && !name_en) {
+    res.status(400);
+    throw new Error('At least one language name is required');
+  }
+  if (!description_uz && !description_ru && !description_en) {
+    res.status(400);
+    throw new Error('At least one language description is required');
+  }
+
   const productData = {
-    nameKey,
-    descriptionKey,
+    name_uz, name_ru, name_en,
+    description_uz, description_ru, description_en,
     price,
     image,
     category,
@@ -130,10 +140,9 @@ export const createProduct = asyncHandler(async (req, res) => {
 
 // PUT /api/products/:id (admin only)
 export const updateProduct = asyncHandler(async (req, res) => {
-  console.log('UPDATE PRODUCT BODY:', req.body); // Debug log
   const {
-    nameKey,
-    descriptionKey,
+    name_uz, name_ru, name_en,
+    description_uz, description_ru, description_en,
     price,
     image,
     category,
@@ -153,9 +162,19 @@ export const updateProduct = asyncHandler(async (req, res) => {
     metaDescription
   } = req.body;
 
+  // At least one language must be present
+  if (!name_uz && !name_ru && !name_en) {
+    res.status(400);
+    throw new Error('At least one language name is required');
+  }
+  if (!description_uz && !description_ru && !description_en) {
+    res.status(400);
+    throw new Error('At least one language description is required');
+  }
+
   const updateData = {
-    nameKey,
-    descriptionKey,
+    name_uz, name_ru, name_en,
+    description_uz, description_ru, description_en,
     price,
     image,
     category,

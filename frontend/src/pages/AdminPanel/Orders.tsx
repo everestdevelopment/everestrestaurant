@@ -224,7 +224,7 @@ const AdminOrders: React.FC = () => {
       <div className="admin-header">
         <h1 className="admin-title">{t('admin.orders.title', 'Buyurtmalar')}</h1>
         <Button variant="outline" size="sm" onClick={fetchOrders} className="admin-button">
-          <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Yangilash')}
+          <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Refresh')}
         </Button>
       </div>
 

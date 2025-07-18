@@ -185,8 +185,7 @@ const AdminUsers: React.FC = () => {
         <h1 className="admin-title">Foydalanuvchilar</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchUsers} className="admin-button">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Yangilash
+            <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.users.refresh', 'Refresh')}
           </Button>
         </div>
       </div>

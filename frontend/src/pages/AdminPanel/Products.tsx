@@ -107,6 +107,12 @@ interface Product {
   orderCount?: number;
   createdAt?: string;
   updatedAt?: string;
+  name_uz?: string;
+  name_ru?: string;
+  name_en?: string;
+  description_uz?: string;
+  description_ru?: string;
+  description_en?: string;
 }
 
 interface ProductFormData {
@@ -173,6 +179,8 @@ const AdminProducts: React.FC = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { i18n } = useTranslation();
+  const lang = i18n.language || 'uz';
 
   // Helper function to normalize category names
   const normalizeCategory = (category: string) => {
@@ -618,7 +626,7 @@ const AdminProducts: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={fetchProducts}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              {t('admin.products.refresh')}
+              {t('admin.products.refresh', 'Refresh')}
             </Button>
           </div>
         </div>
@@ -655,172 +663,96 @@ const AdminProducts: React.FC = () => {
           ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
           : "space-y-4"
         }>
-          {filteredProducts.map((product) => (
-            <div key={product._id} className={viewMode === 'grid' 
-              ? "bg-white dark:bg-slate-800 rounded-xl border shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 group" 
-              : "bg-white dark:bg-slate-800 rounded-xl border shadow-sm p-6 hover:shadow-lg transition-all duration-200"
-            }>
-              {viewMode === 'grid' ? (
-                // Grid view
-                <>
-                  <div className="relative">
-                    {product.image ? (
-                      <img 
-                        src={getImageUrl(product.image)} 
-                        alt={product.nameKey}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <div className={`${product.image ? 'hidden' : ''} w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-                      <div className="text-center">
-                        <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">{t('admin.products.noImage')}</p>
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3 flex flex-col gap-2">
-                      <Badge variant="secondary" className="text-xs bg-white/90 dark:bg-slate-800/90">
-                        {getCategoryLabel(product.category)}
-                      </Badge>
-                      <Badge variant={product.isAvailable ? "default" : "destructive"} className="text-xs">
-                        {product.isAvailable ? (
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            {t('admin.products.available')}
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <EyeOff className="w-3 h-3" />
-                            {t('admin.products.unavailable')}
-                          </span>
-                        )}
-                      </Badge>
-                    </div>
-                    {!product.isAvailable && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <Badge variant="destructive" className="text-lg">{t('admin.products.unavailable')}</Badge>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.nameKey}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                      {product.descriptionKey}
-                    </p>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-1">
-                        {getRatingStars(product.rating)}
-                        <span className="text-xs text-gray-500">({product.rating})</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-lg text-green-600">
-                          {product.price.toLocaleString()} {t('admin.products.currency')}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <ShoppingCart className="w-3 h-3" />
-                            {product.quantity > 0 ? t('admin.products.quantityCount', { count: product.quantity }) : t('admin.products.quantityNotSpecified')}
-                          </span>
+          {filteredProducts.map((product) => {
+            const productName =
+              product[`name_${lang}`] ||
+              product.name_uz ||
+              product.name_ru ||
+              product.name_en ||
+              '';
+            const productDescription =
+              product[`description_${lang}`] ||
+              product.description_uz ||
+              product.description_ru ||
+              product.description_en ||
+              '';
+            return (
+              <div key={product._id} className={viewMode === 'grid' 
+                ? "bg-white dark:bg-slate-800 rounded-xl border shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 group" 
+                : "bg-white dark:bg-slate-800 rounded-xl border shadow-sm p-6 hover:shadow-lg transition-all duration-200"
+              }>
+                {viewMode === 'grid' ? (
+                  // Grid view
+                  <>
+                    <div className="relative">
+                      {product.image ? (
+                        <img 
+                          src={getImageUrl(product.image)} 
+                          alt={productName}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`${product.image ? 'hidden' : ''} w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+                        <div className="text-center">
+                          <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500">{t('admin.products.noImage')}</p>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openEditModal(product)} className="flex-1">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive" className="flex-1">
-                            <Trash className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>{t('admin.products.deleteProduct')}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {t('admin.products.deleteConfirm', { name: product.nameKey })}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>{t('admin.products.cancel')}</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteProduct(product._id)}>
-                              {t('admin.products.delete')}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                // List view
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    {product.image ? (
-                      <img 
-                        src={getImageUrl(product.image)} 
-                        alt={product.nameKey}
-                        className="w-20 h-20 object-cover rounded-lg"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <div className={`${product.image ? 'hidden' : ''} w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center`}>
-                      <div className="text-center">
-                        <ImageIcon className="w-6 h-6 mx-auto text-gray-400" />
-                      </div>
-                    </div>
-                    {!product.isAvailable && (
-                      <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                        <EyeOff className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-lg">{product.nameKey}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                          {product.descriptionKey}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-lg text-green-600">
-                          {product.price.toLocaleString()} {t('admin.products.currency')}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <ShoppingCart className="w-3 h-3" />
-                            {product.quantity > 0 ? t('admin.products.quantityCount', { count: product.quantity }) : t('admin.products.quantityNotSpecified')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Badge variant="secondary" className="text-xs">
+                      <div className="absolute top-3 right-3 flex flex-col gap-2">
+                        <Badge variant="secondary" className="text-xs bg-white/90 dark:bg-slate-800/90">
                           {getCategoryLabel(product.category)}
                         </Badge>
+                        <Badge variant={product.isAvailable ? "default" : "destructive"} className="text-xs">
+                          {product.isAvailable ? (
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3 h-3" />
+                              {t('admin.products.available')}
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <EyeOff className="w-3 h-3" />
+                              {t('admin.products.unavailable')}
+                            </span>
+                          )}
+                        </Badge>
+                      </div>
+                      {!product.isAvailable && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Badge variant="destructive" className="text-lg">{t('admin.products.unavailable')}</Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-1">{productName}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{productDescription}</p>
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1">
                           {getRatingStars(product.rating)}
                           <span className="text-xs text-gray-500">({product.rating})</span>
                         </div>
-                        <Badge variant={product.isAvailable ? "default" : "destructive"} className="text-xs">
-                          {product.isAvailable ? t('admin.products.available') : t('admin.products.unavailable')}
-                        </Badge>
+                        <div className="text-right">
+                          <div className="font-bold text-lg text-green-600">
+                            {product.price.toLocaleString()} {t('admin.products.currency')}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <ShoppingCart className="w-3 h-3" />
+                              {product.quantity > 0 ? t('admin.products.quantityCount', { count: product.quantity }) : t('admin.products.quantityNotSpecified')}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => openEditModal(product)}>
+                        <Button size="sm" variant="outline" onClick={() => openEditModal(product)} className="flex-1">
                           <Pencil className="w-4 h-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive">
+                            <Button size="sm" variant="destructive" className="flex-1">
                               <Trash className="w-4 h-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -828,7 +760,7 @@ const AdminProducts: React.FC = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>{t('admin.products.deleteProduct')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                {t('admin.products.deleteConfirm', { name: product.nameKey })}
+                                {t('admin.products.deleteConfirm', { name: productName })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -841,11 +773,97 @@ const AdminProducts: React.FC = () => {
                         </AlertDialog>
                       </div>
                     </div>
+                  </>
+                ) : (
+                  // List view
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      {product.image ? (
+                        <img 
+                          src={getImageUrl(product.image)} 
+                          alt={productName}
+                          className="w-20 h-20 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`${product.image ? 'hidden' : ''} w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center`}>
+                        <div className="text-center">
+                          <ImageIcon className="w-6 h-6 mx-auto text-gray-400" />
+                        </div>
+                      </div>
+                      {!product.isAvailable && (
+                        <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                          <EyeOff className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-lg">{productName}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{productDescription}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg text-green-600">
+                            {product.price.toLocaleString()} {t('admin.products.currency')}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <ShoppingCart className="w-3 h-3" />
+                              {product.quantity > 0 ? t('admin.products.quantityCount', { count: product.quantity }) : t('admin.products.quantityNotSpecified')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <Badge variant="secondary" className="text-xs">
+                            {getCategoryLabel(product.category)}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            {getRatingStars(product.rating)}
+                            <span className="text-xs text-gray-500">({product.rating})</span>
+                          </div>
+                          <Badge variant={product.isAvailable ? "default" : "destructive"} className="text-xs">
+                            {product.isAvailable ? t('admin.products.available') : t('admin.products.unavailable')}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => openEditModal(product)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('admin.products.deleteProduct')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('admin.products.deleteConfirm', { name: productName })}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('admin.products.cancel')}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteProduct(product._id)}>
+                                  {t('admin.products.delete')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

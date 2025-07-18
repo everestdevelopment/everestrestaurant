@@ -207,7 +207,7 @@ const AdminReservations: React.FC = () => {
       <div className="admin-header">
         <h1 className="admin-title">{t('admin.reservations.title')}</h1>
         <Button variant="outline" size="sm" onClick={fetchReservations} className="admin-button">
-          <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.reservations.refresh')}
+          <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.reservations.refresh', 'Refresh')}
         </Button>
       </div>
 

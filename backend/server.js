@@ -42,7 +42,7 @@ const io = new Server(server, {
     origin: [
       process.env.FRONTEND_URL || "http://localhost:8080",
       "https://everestrestaurantcook.vercel.app",
-      "https://everestrestaurantcook.vercel.app/"
+      "https://everestrestaurantcook.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,

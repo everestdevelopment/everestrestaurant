@@ -133,7 +133,7 @@ const AdminDashboard: React.FC = () => {
           )}
           <Button variant="outline" size="sm" onClick={fetchStats}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            {t('admin.dashboard.refresh')}
+            {t('admin.dashboard.refresh', 'Refresh')}
           </Button>
         </div>
       </div>
