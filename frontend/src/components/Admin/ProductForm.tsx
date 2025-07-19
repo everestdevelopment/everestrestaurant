@@ -260,7 +260,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validation: at least one language must have name and description
     const hasAnyLang = LANGS.some(l => multiLang[l.code].name && multiLang[l.code].description);
     if (!hasAnyLang || !formData.price || !formData.image || !formData.category) {
@@ -300,22 +300,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
         {LANGS.map(l => (
           <LangTabsContent key={l.code} value={l.code}>
             {/* Asosiy ma'lumotlar formi */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  {t('admin.products.form.sections.basic')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                {t('admin.products.form.sections.basic')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                     <Label htmlFor={`name_${l.code}`}>{t('admin.products.form.fields.name')}</Label>
-                    <Input
+                  <Input
                       id={`name_${l.code}`}
                       value={multiLang[l.code].name}
                       onChange={e => handleMultiLangChange(l.code, 'name', e.target.value)}
-                      placeholder={t('admin.products.form.placeholders.name')}
+                    placeholder={t('admin.products.form.placeholders.name')}
                       required={activeLang === l.code}
                     />
                   </div>
@@ -328,7 +328,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       placeholder={t('admin.products.form.placeholders.shortDescription')}
                       rows={3}
                       required={activeLang === l.code}
-                    />
+                  />
                   </div>
                 </div>
 
@@ -346,106 +346,106 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="price">{t('admin.products.form.fields.price')}</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => handleInputChange('price', e.target.value)}
-                      placeholder={t('admin.products.form.placeholders.price')}
-                      min="0"
-                      step="100"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="rating">{t('admin.products.form.fields.rating')}</Label>
-                    <Input
-                      id="rating"
-                      type="number"
-                      value={formData.rating}
-                      onChange={(e) => handleInputChange('rating', parseFloat(e.target.value))}
-                      placeholder={t('admin.products.form.placeholders.rating')}
-                      min="0"
-                      max="5"
-                      step="0.1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="quantity">{t('admin.products.form.fields.quantity')}</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={formData.quantity}
-                      onChange={(e) => handleInputChange('quantity', e.target.value)}
-                      placeholder={t('admin.products.form.placeholders.quantity')}
-                      min="0"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="isAvailable"
-                    checked={formData.isAvailable}
-                    onCheckedChange={(checked) => handleInputChange('isAvailable', checked)}
-                  />
-                  <Label htmlFor="isAvailable">{t('admin.products.form.fields.isAvailable')}</Label>
-                </div>
-
-                {/* Asosiy rasm */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label>{t('admin.products.form.fields.mainImage')}</Label>
-                  <div className="mt-2">
-                    {formData.image ? (
-                      <div className="relative inline-block">
-                        <img
-                          src={getImageUrl(formData.image)}
-                          alt="Asosiy rasm"
-                          className="w-32 h-32 object-cover rounded border"
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="destructive"
-                          className="absolute -top-2 -right-2"
-                          onClick={() => handleInputChange('image', '')}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                        <Label htmlFor="main-image" className="cursor-pointer text-blue-600 hover:text-blue-700">
-                          {t('admin.products.form.actions.uploadImage')}
-                        </Label>
-                        <input
-                          id="main-image"
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleFileChange(e, 'image')}
-                          className="hidden"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <Label htmlFor="image-url">{t('admin.products.form.fields.imageUrl')}</Label>
-                    <Input
-                      id="image-url"
-                      value={typeof formData.image === 'string' ? formData.image : ''}
-                      onChange={e => handleInputChange('image', e.target.value)}
-                      placeholder={t('admin.products.form.placeholders.imageUrl')}
-                    />
-                  </div>
+                  <Label htmlFor="price">{t('admin.products.form.fields.price')}</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    placeholder={t('admin.products.form.placeholders.price')}
+                    min="0"
+                    step="100"
+                    required
+                  />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <Label htmlFor="rating">{t('admin.products.form.fields.rating')}</Label>
+                  <Input
+                    id="rating"
+                    type="number"
+                    value={formData.rating}
+                    onChange={(e) => handleInputChange('rating', parseFloat(e.target.value))}
+                    placeholder={t('admin.products.form.placeholders.rating')}
+                    min="0"
+                    max="5"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="quantity">{t('admin.products.form.fields.quantity')}</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    value={formData.quantity}
+                    onChange={(e) => handleInputChange('quantity', e.target.value)}
+                    placeholder={t('admin.products.form.placeholders.quantity')}
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isAvailable"
+                  checked={formData.isAvailable}
+                  onCheckedChange={(checked) => handleInputChange('isAvailable', checked)}
+                />
+                <Label htmlFor="isAvailable">{t('admin.products.form.fields.isAvailable')}</Label>
+              </div>
+
+              {/* Asosiy rasm */}
+              <div>
+                <Label>{t('admin.products.form.fields.mainImage')}</Label>
+                <div className="mt-2">
+                  {formData.image ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={getImageUrl(formData.image)}
+                        alt="Asosiy rasm"
+                        className="w-32 h-32 object-cover rounded border"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2"
+                        onClick={() => handleInputChange('image', '')}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                      <Label htmlFor="main-image" className="cursor-pointer text-blue-600 hover:text-blue-700">
+                        {t('admin.products.form.actions.uploadImage')}
+                      </Label>
+                      <input
+                        id="main-image"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'image')}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <Label htmlFor="image-url">{t('admin.products.form.fields.imageUrl')}</Label>
+                  <Input
+                    id="image-url"
+                    value={typeof formData.image === 'string' ? formData.image : ''}
+                    onChange={e => handleInputChange('image', e.target.value)}
+                    placeholder={t('admin.products.form.placeholders.imageUrl')}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           </LangTabsContent>
         ))}
       </LangTabs>

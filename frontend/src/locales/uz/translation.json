@@ -1543,7 +1543,7 @@
           "cancel": "Bekor qilish",
           "save": "Saqlash"
         }
-      },
+        },
       "resultsCount": "Natijalar: {{filtered}} ta / Jami: {{total}} ta"
     },
     "reservations": {

@@ -769,35 +769,35 @@
       "cancel": "Отмена",
       "delete": "Удалить"
     },
-    "form": {
-      "sections": {
+      "form": {
+        "sections": {
         "basic": "Основная информация"
-      },
-      "fields": {
+        },
+        "fields": {
         "name": "Название продукта",
         "shortDescription": "Краткое описание",
         "category": "Категория",
         "price": "Цена",
-        "rating": "Рейтинг",
-        "quantity": "Количество",
+          "rating": "Рейтинг",
+          "quantity": "Количество",
         "isAvailable": "Доступность",
         "mainImage": "Основное изображение",
         "imageUrl": "URL изображения"
-      },
-      "placeholders": {
-        "name": "Введите название продукта",
-        "shortDescription": "Введите краткое описание",
+        },
+        "placeholders": {
+          "name": "Введите название продукта",
+          "shortDescription": "Введите краткое описание",
         "category": "Выберите категорию",
         "price": "Введите цену",
         "quantity": "Введите количество",
         "imageUrl": "Введите URL изображения"
-      },
-      "actions": {
-        "uploadImage": "Загрузить изображение",
-        "cancel": "Отмена",
+        },
+        "actions": {
+          "uploadImage": "Загрузить изображение",
+          "cancel": "Отмена",
         "save": "Сохранить"
       }
-    },
+        },
     "resultsCount": "Результаты: {{filtered}} / Всего: {{total}}",
     "reservations": {
       "title": "Бронирования",

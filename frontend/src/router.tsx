@@ -1,5 +1,5 @@
-import { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Loader from './components/ui/Loader';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -114,175 +114,189 @@ const AppLayout = () => (
   </>
 );
 
+// Scroll to top component
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
 const AppRouter = () => {
   return (
-    <Routes>
-      {/* Main application routes with Navbar and Footer */}
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Index />} />
-        <Route path="/menu" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Menu />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/menu/:id" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <ProductDetail />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/about" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <About />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/cart" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Cart />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/liked" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Liked />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/privacy-policy" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <PrivacyPolicy />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/terms-of-service" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <TermsOfService />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/reservations" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Reservations />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="/contact" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <Contact />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/checkout" element={
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Main application routes with Navbar and Footer */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Index />} />
+          <Route path="/menu" element={
             <ErrorBoundary fallback={<ErrorFallback />}>
               <Suspense fallback={<LoadingFallback />}>
-                <Checkout />
+                <Menu />
               </Suspense>
             </ErrorBoundary>
           } />
-          <Route path="/my-bookings" element={
+          <Route path="/menu/:id" element={
             <ErrorBoundary fallback={<ErrorFallback />}>
               <Suspense fallback={<LoadingFallback />}>
-                <MyBookings />
+                <ProductDetail />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/about" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <About />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/cart" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Cart />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/liked" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Liked />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/privacy-policy" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <PrivacyPolicy />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/terms-of-service" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <TermsOfService />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/reservations" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Reservations />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="/contact" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <Contact />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/checkout" element={
+              <ErrorBoundary fallback={<ErrorFallback />}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Checkout />
+                </Suspense>
+              </ErrorBoundary>
+            } />
+            <Route path="/my-bookings" element={
+              <ErrorBoundary fallback={<ErrorFallback />}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <MyBookings />
+                </Suspense>
+              </ErrorBoundary>
+            } />
+          </Route>
+          
+          {/* Profile route - accessible to all authenticated users */}
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+
+        {/* Auth routes without Navbar/Footer */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Register />} />
+        
+        {/* Not Found Route */}
+        <Route path="*" element={<NotFound />} />
+
+        {/* Admin Panel routes */}
+        <Route path="/admin" element={
+          <ErrorBoundary fallback={<ErrorFallback />}>
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminLayout />
+            </Suspense>
+          </ErrorBoundary>
+        }>
+          <Route index element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminDashboard />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="orders" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminOrders />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="products" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminProducts />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="reservations" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminReservations />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="payments" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminPayments />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="messages" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminMessages />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="users" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminUsers />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+          <Route path="banners" element={
+            <ErrorBoundary fallback={<ErrorFallback />}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminBanners />
               </Suspense>
             </ErrorBoundary>
           } />
         </Route>
-        
-        {/* Profile route - accessible to all authenticated users */}
-        <Route path="/profile" element={<Profile />} />
-      </Route>
 
-      {/* Auth routes without Navbar/Footer */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Register />} />
-      
-      {/* Not Found Route */}
-      <Route path="*" element={<NotFound />} />
-
-      {/* Admin Panel routes */}
-      <Route path="/admin" element={
-        <ErrorBoundary fallback={<ErrorFallback />}>
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminLayout />
-          </Suspense>
-        </ErrorBoundary>
-      }>
-        <Route index element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminDashboard />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="orders" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminOrders />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="products" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminProducts />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="reservations" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminReservations />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="payments" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminPayments />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="messages" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminMessages />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="users" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminUsers />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-        <Route path="banners" element={
-          <ErrorBoundary fallback={<ErrorFallback />}>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminBanners />
-            </Suspense>
-          </ErrorBoundary>
-        } />
-      </Route>
-
-      <Route path="/verify" element={<Verify />} />
-      <Route path="/set-password" element={<SetPassword />} />
-      <Route path="/reset-password" element={<PasswordReset />} />
-    </Routes>
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/reset-password" element={<PasswordReset />} />
+      </Routes>
+    </>
   );
 };
 

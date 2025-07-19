@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Heart, Facebook, Instagram, Twitter, Send } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const socialLinks = [
@@ -28,11 +28,13 @@ const socialLinks = [
 
 const Footer = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   
   const quickLinks = [
     { name: t('footer_link_menu'), to: '/menu' },
     { name: t('footer_link_reservations'), to: '/reservations' },
     { name: t('nav_contact'), to: '/contact' },
+    { name: t('nav_about'), to: '/about' },
   ];
 
   return (
@@ -125,7 +127,11 @@ const Footer = () => {
                 <Link
                   key={link.name}
                   to={link.to}
-                  className="block text-slate-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200 text-sm"
+                  className={`block transition-colors duration-200 text-sm ${
+                    location.pathname === link.to 
+                      ? 'text-yellow-500 dark:text-yellow-400' 
+                      : 'text-slate-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400'
+                  }`}
                 >
                   {link.name}
                 </Link>
@@ -137,7 +143,37 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-slate-200 dark:border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-500 dark:text-gray-400 text-sm mb-4 md:mb-0">
-            {t('footer_copyright')} | <Link to="/privacy-policy" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('footer_privacy_policy')}</Link> | <Link to="/contact" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('nav_contact')}</Link> | <Link to="/terms-of-service" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('footer_terms')}</Link>
+            {t('footer_copyright')} | 
+            <Link 
+              to="/privacy-policy" 
+              className={`transition-colors duration-200 ${
+                location.pathname === '/privacy-policy' 
+                  ? 'text-yellow-500 dark:text-yellow-400' 
+                  : 'hover:text-yellow-500 dark:hover:text-yellow-400'
+              }`}
+            >
+              {t('footer_privacy_policy')}
+            </Link> | 
+            <Link 
+              to="/contact" 
+              className={`transition-colors duration-200 ${
+                location.pathname === '/contact' 
+                  ? 'text-yellow-500 dark:text-yellow-400' 
+                  : 'hover:text-yellow-500 dark:hover:text-yellow-400'
+              }`}
+            >
+              {t('nav_contact')}
+            </Link> | 
+            <Link 
+              to="/terms-of-service" 
+              className={`transition-colors duration-200 ${
+                location.pathname === '/terms-of-service' 
+                  ? 'text-yellow-500 dark:text-yellow-400' 
+                  : 'hover:text-yellow-500 dark:hover:text-yellow-400'
+              }`}
+            >
+              {t('footer_terms')}
+            </Link>
           </p>
           <div className="flex items-center space-x-2 text-slate-500 dark:text-gray-400 text-sm">
             <span>{t('footer_by')}</span>

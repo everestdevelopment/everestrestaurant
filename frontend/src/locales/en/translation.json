@@ -1261,7 +1261,7 @@
           "cancel": "Cancel",
           "save": "Save"
         }
-      },
+        },
       "resultsCount": "Results: {{filtered}} / Total: {{total}}"
     },
     "reservations": {
