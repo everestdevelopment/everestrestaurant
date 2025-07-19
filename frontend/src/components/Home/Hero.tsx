@@ -13,7 +13,7 @@ const Hero = () => {
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
         <div className="absolute inset-0 w-full h-full overflow-hidden">
           <video
-            src="/Everest Restaurant Home Video.mp4"
+            src="https://youtu.be/JTNAHpNQWbw"
             autoPlay
             loop
             muted
