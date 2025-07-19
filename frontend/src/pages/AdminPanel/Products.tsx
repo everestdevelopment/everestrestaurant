@@ -216,26 +216,26 @@ const AdminProducts: React.FC = () => {
   };
 
   const categories = [
-    { value: 'all', label: t('admin.products.allCategories'), icon: '🍽️' },
-    { value: 'appetizers', label: t('menu_category_appetizers'), icon: '🥗' },
-    { value: 'main_courses', label: t('menu_category_main_courses'), icon: '🍖' },
-    { value: 'desserts', label: t('menu_category_desserts'), icon: '🍰' },
-    { value: 'beverages', label: t('menu_category_beverages'), icon: '🥤' },
-    { value: 'pizza', label: t('menu_category_pizza'), icon: '🍕' },
-    { value: 'pasta', label: t('menu_category_pasta'), icon: '🍝' },
-    { value: 'salads', label: t('menu_category_salads'), icon: '🥬' },
-    { value: 'seafood', label: t('menu_category_seafood'), icon: '🐟' },
-    { value: 'steaks', label: t('menu_category_steaks'), icon: '🥩' },
-    { value: 'soups', label: t('menu_category_soups'), icon: '🍲' },
-    { value: 'grilled', label: t('menu_category_grilled'), icon: '🔥' },
-    { value: 'vegan', label: t('menu_category_vegan'), icon: '🌱' },
-    { value: 'sushi', label: t('menu_category_sushi'), icon: '🍣' },
-    { value: 'sandwiches', label: t('menu_category_sandwiches'), icon: '🥪' },
-    { value: 'breakfast', label: t('menu_category_breakfast'), icon: '🍳' },
-    { value: 'kids', label: t('menu_category_kids'), icon: '👶' },
-    { value: 'specials', label: t('menu_category_specials'), icon: '⭐' },
-    { value: 'cocktails', label: t('menu_category_cocktails'), icon: '🍸' },
-    { value: 'smoothies', label: t('menu_category_smoothies'), icon: '🥤' }
+    { value: 'all', label: t('admin.products.allCategories'), icon: '' },
+    { value: 'appetizers', label: t('menu_category_appetizers'), icon: '' },
+    { value: 'main_courses', label: t('menu_category_main_courses'), icon: '' },
+    { value: 'desserts', label: t('menu_category_desserts'), icon: '' },
+    { value: 'beverages', label: t('menu_category_beverages'), icon: '' },
+    { value: 'pizza', label: t('menu_category_pizza'), icon: '' },
+    { value: 'pasta', label: t('menu_category_pasta'), icon: '' },
+    { value: 'salads', label: t('menu_category_salads'), icon: '' },
+    { value: 'seafood', label: t('menu_category_seafood'), icon: '' },
+    { value: 'steaks', label: t('menu_category_steaks'), icon: '' },
+    { value: 'soups', label: t('menu_category_soups'), icon: '' },
+    { value: 'grilled', label: t('menu_category_grilled'), icon: '' },
+    { value: 'vegan', label: t('menu_category_vegan'), icon: '' },
+    { value: 'sushi', label: t('menu_category_sushi'), icon: '' },
+    { value: 'sandwiches', label: t('menu_category_sandwiches'), icon: '' },
+    { value: 'breakfast', label: t('menu_category_breakfast'), icon: '' },
+    { value: 'kids', label: t('menu_category_kids'), icon: '' },
+    { value: 'specials', label: t('menu_category_specials'), icon: '' },
+    { value: 'cocktails', label: t('menu_category_cocktails'), icon: '' },
+    { value: 'smoothies', label: t('menu_category_smoothies'), icon: '' }
   ];
 
   const ratingOptions = [
