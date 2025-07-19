@@ -362,7 +362,7 @@ const AdminLayout = () => {
       )}>
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
-          <div className="p-3 md:p-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="p-3 md:p-4 border-b border-slate-200 dark:border-slate-700" style={{ paddingTop: 'calc(1rem + 20px)' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Shield className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
@@ -459,7 +459,7 @@ const AdminLayout = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-3 md:p-4">
+          <nav className="flex-1 p-3 md:p-4" style={{ paddingTop: 'calc(1rem)' }}>
             <ul className="space-y-1 md:space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;

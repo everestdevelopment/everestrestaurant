@@ -118,6 +118,12 @@ interface Product {
 interface ProductFormData {
   nameKey: string;
   descriptionKey: string;
+  name_uz?: string;
+  name_ru?: string;
+  name_en?: string;
+  description_uz?: string;
+  description_ru?: string;
+  description_en?: string;
   price: string;
   image: string;
   category: string;
@@ -886,6 +892,12 @@ const AdminProducts: React.FC = () => {
             initialData={editingProduct ? {
               nameKey: editingProduct.nameKey,
               descriptionKey: editingProduct.descriptionKey,
+              name_uz: editingProduct.name_uz || '',
+              name_ru: editingProduct.name_ru || '',
+              name_en: editingProduct.name_en || '',
+              description_uz: editingProduct.description_uz || '',
+              description_ru: editingProduct.description_ru || '',
+              description_en: editingProduct.description_en || '',
               price: editingProduct.price.toString(),
               image: editingProduct.image,
               category: normalizeCategory(editingProduct.category),
