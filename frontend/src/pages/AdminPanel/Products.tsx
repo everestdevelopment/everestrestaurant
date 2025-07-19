@@ -267,6 +267,22 @@ const AdminProducts: React.FC = () => {
     fetchProducts();
   }, [fetchProducts]); // Empty dependency array - only run once on mount
 
+  // Mobile da viewMode ni har doim 'grid' qilib o'rnatish
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) { // md breakpoint
+        setViewMode('grid');
+      }
+    };
+
+    // Dastlabki tekshirish
+    handleResize();
+
+    // Oynaning o'lchami o'zgarganda tekshirish
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const resetForm = useCallback(() => {
     setFormData({
       nameKey: '',
@@ -603,8 +619,8 @@ const AdminProducts: React.FC = () => {
             </Select>
           </div>
 
-          {/* View Mode */}
-          <div className="flex items-center gap-2">
+          {/* View Mode - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-2">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
