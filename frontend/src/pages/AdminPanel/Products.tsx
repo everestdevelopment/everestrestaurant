@@ -582,7 +582,7 @@ const AdminProducts: React.FC = () => {
                 <SelectValue placeholder={t('admin.products.allCategories')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">🍽️ {t('admin.products.allCategories')}</SelectItem>
+                <SelectItem value="all"> {t('admin.products.allCategories')}</SelectItem>
                 {categories.slice(1).map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     <span className="flex items-center gap-2">
