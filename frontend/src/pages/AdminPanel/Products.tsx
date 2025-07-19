@@ -13,6 +13,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Pencil, Trash, Plus, Loader2, Star, Package, DollarSign, Image as ImageIcon, Upload, Link, X, Search, Filter, Grid, List, Eye, EyeOff, ShoppingCart, RefreshCw } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
+import ProductForm from '@/components/Admin/ProductForm';
+import { useTranslation } from 'react-i18next';
 
 // CSS stillar
 const styles = `
@@ -83,20 +85,73 @@ interface Product {
   rating: number;
   quantity: number;
   isAvailable: boolean;
+  fullDescription?: string;
+  types?: Array<{
+    name: string;
+    price: number;
+    description?: string;
+  }>;
+  ingredients?: Array<{
+    name: string;
+    description?: string;
+  }>;
+  preparationMethod?: string;
+  preparationTime?: number;
+  calories?: number;
+  allergens?: string[];
+  tags?: string[];
+  additionalImages?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
+  viewCount?: number;
+  orderCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  name_uz?: string;
+  name_ru?: string;
+  name_en?: string;
+  description_uz?: string;
+  description_ru?: string;
+  description_en?: string;
 }
 
 interface ProductFormData {
   nameKey: string;
   descriptionKey: string;
+  name_uz?: string;
+  name_ru?: string;
+  name_en?: string;
+  description_uz?: string;
+  description_ru?: string;
+  description_en?: string;
   price: string;
   image: string;
   category: string;
   rating: number;
   quantity: string;
   isAvailable: boolean;
+  fullDescription: string;
+  types: Array<{
+    name: string;
+    price: number;
+    description?: string;
+  }>;
+  ingredients: Array<{
+    name: string;
+    description?: string;
+  }>;
+  preparationMethod: string;
+  preparationTime: string;
+  calories: string;
+  allergens: string[];
+  tags: string[];
+  additionalImages: string[];
+  metaTitle: string;
+  metaDescription: string;
 }
 
 const AdminProducts: React.FC = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,12 +168,25 @@ const AdminProducts: React.FC = () => {
     price: '',
     image: '',
     category: '',
-    rating: 0,
+    rating: 4.5,
     quantity: '',
-    isAvailable: true
+    isAvailable: true,
+    fullDescription: '',
+    types: [],
+    ingredients: [],
+    preparationMethod: '',
+    preparationTime: '15',
+    calories: '',
+    allergens: [],
+    tags: [],
+    additionalImages: [],
+    metaTitle: '',
+    metaDescription: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { i18n } = useTranslation();
+  const lang = i18n.language || 'uz';
 
   // Helper function to normalize category names
   const normalizeCategory = (category: string) => {
@@ -148,35 +216,35 @@ const AdminProducts: React.FC = () => {
   };
 
   const categories = [
-    { value: 'all', label: 'Barcha mahsulotlar', icon: '🍽️' },
-    { value: 'appetizers', label: 'Aperatiflar', icon: '🥗' },
-    { value: 'main_courses', label: 'Asosiy taomlar', icon: '🍖' },
-    { value: 'desserts', label: 'Shirinliklar', icon: '🍰' },
-    { value: 'beverages', label: 'Ichimliklar', icon: '🥤' },
-    { value: 'pizza', label: 'Pitsa', icon: '🍕' },
-    { value: 'pasta', label: 'Makaron', icon: '🍝' },
-    { value: 'salads', label: 'Salatlar', icon: '🥬' },
-    { value: 'seafood', label: 'Dengiz mahsulotlari', icon: '🐟' },
-    { value: 'steaks', label: 'Steklar', icon: '🥩' },
-    { value: 'soups', label: 'Shorvalar', icon: '🍲' },
-    { value: 'grilled', label: 'Grill', icon: '🔥' },
-    { value: 'vegan', label: 'Vegan', icon: '🌱' },
-    { value: 'sushi', label: 'Sushi', icon: '🍣' },
-    { value: 'sandwiches', label: 'Sendvichlar', icon: '🥪' },
-    { value: 'breakfast', label: 'Nonushta', icon: '🍳' },
-    { value: 'kids', label: 'Bolalar uchun', icon: '👶' },
-    { value: 'specials', label: 'Maxsus taomlar', icon: '⭐' },
-    { value: 'cocktails', label: 'Kokteyllar', icon: '🍸' },
-    { value: 'smoothies', label: 'Smoothielar', icon: '🥤' }
+    { value: 'all', label: t('admin.products.allCategories'), icon: '🍽️' },
+    { value: 'appetizers', label: t('menu_category_appetizers'), icon: '🥗' },
+    { value: 'main_courses', label: t('menu_category_main_courses'), icon: '🍖' },
+    { value: 'desserts', label: t('menu_category_desserts'), icon: '🍰' },
+    { value: 'beverages', label: t('menu_category_beverages'), icon: '🥤' },
+    { value: 'pizza', label: t('menu_category_pizza'), icon: '🍕' },
+    { value: 'pasta', label: t('menu_category_pasta'), icon: '🍝' },
+    { value: 'salads', label: t('menu_category_salads'), icon: '🥬' },
+    { value: 'seafood', label: t('menu_category_seafood'), icon: '🐟' },
+    { value: 'steaks', label: t('menu_category_steaks'), icon: '🥩' },
+    { value: 'soups', label: t('menu_category_soups'), icon: '🍲' },
+    { value: 'grilled', label: t('menu_category_grilled'), icon: '🔥' },
+    { value: 'vegan', label: t('menu_category_vegan'), icon: '🌱' },
+    { value: 'sushi', label: t('menu_category_sushi'), icon: '🍣' },
+    { value: 'sandwiches', label: t('menu_category_sandwiches'), icon: '🥪' },
+    { value: 'breakfast', label: t('menu_category_breakfast'), icon: '🍳' },
+    { value: 'kids', label: t('menu_category_kids'), icon: '👶' },
+    { value: 'specials', label: t('menu_category_specials'), icon: '⭐' },
+    { value: 'cocktails', label: t('menu_category_cocktails'), icon: '🍸' },
+    { value: 'smoothies', label: t('menu_category_smoothies'), icon: '🥤' }
   ];
 
   const ratingOptions = [
-    { value: 0, label: 'Reyting yo\'q', stars: 0 },
-    { value: 1, label: '1 yulduz', stars: 1 },
-    { value: 2, label: '2 yulduz', stars: 2 },
-    { value: 3, label: '3 yulduz', stars: 3 },
-    { value: 4, label: '4 yulduz', stars: 4 },
-    { value: 5, label: '5 yulduz', stars: 5 }
+    { value: 0, label: t('admin.products.noRating'), stars: 0 },
+    { value: 1, label: t('admin.products.oneStar'), stars: 1 },
+    { value: 2, label: t('admin.products.twoStars'), stars: 2 },
+    { value: 3, label: t('admin.products.threeStars'), stars: 3 },
+    { value: 4, label: t('admin.products.fourStars'), stars: 4 },
+    { value: 5, label: t('admin.products.fiveStars'), stars: 5 }
   ];
 
   const fetchProducts = useCallback(async () => {
@@ -188,16 +256,32 @@ const AdminProducts: React.FC = () => {
       const productsData = data.data?.docs || data.data || [];
       setProducts(productsData);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch products');
-      toast({ title: 'Error', description: err.message || 'Failed to fetch products', variant: 'destructive' });
+      setError(err.message || t('admin.products.fetchError'));
+      toast({ title: t('admin.products.error'), description: err.message || t('admin.products.fetchError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, t]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]); // Empty dependency array - only run once on mount
+
+  // Mobile da viewMode ni har doim 'grid' qilib o'rnatish
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) { // md breakpoint
+        setViewMode('grid');
+      }
+    };
+
+    // Dastlabki tekshirish
+    handleResize();
+
+    // Oynaning o'lchami o'zgarganda tekshirish
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const resetForm = useCallback(() => {
     setFormData({
@@ -206,116 +290,130 @@ const AdminProducts: React.FC = () => {
       price: '',
       image: '',
       category: '',
-      rating: 0,
+      rating: 4.5,
       quantity: '',
-      isAvailable: true
+      isAvailable: true,
+      fullDescription: '',
+      types: [],
+      ingredients: [],
+      preparationMethod: '',
+      preparationTime: '15',
+      calories: '',
+      allergens: [],
+      tags: [],
+      additionalImages: [],
+      metaTitle: '',
+      metaDescription: ''
     });
   }, []);
 
   const validateForm = useCallback(() => {
     if (!formData.nameKey.trim()) {
-      toast({ title: 'Xato', description: 'Mahsulot nomi bo\'sh', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: t('admin.products.nameRequired'), variant: 'destructive' });
       return false;
     }
     if (!formData.descriptionKey.trim()) {
-      toast({ title: 'Xato', description: 'Mahsulot tavsifi bo\'sh', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: t('admin.products.descriptionRequired'), variant: 'destructive' });
       return false;
     }
     if (formData.price === '') {
-      toast({ title: 'Xato', description: 'Narx bo\'sh', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: t('admin.products.priceRequired'), variant: 'destructive' });
       return false;
     }
     if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
-      toast({ title: 'Xato', description: 'Narx son bo\'lishi kerak', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: t('admin.products.priceMustBeNumber'), variant: 'destructive' });
       return false;
     }
     if (!formData.category) {
-      toast({ title: 'Xato', description: 'Kategoriya tanlanmagan', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: t('admin.products.categoryRequired'), variant: 'destructive' });
       return false;
     }
     // Quantity ixtiyoriy, agar kiritilgan bo'lsa tekshirish
     if (formData.quantity && formData.quantity.trim() !== '') {
       if (isNaN(parseInt(formData.quantity)) || parseInt(formData.quantity) < 0) {
-        toast({ title: 'Xato', description: 'Miqdori manfiy bo\'lishi mumkin emas', variant: 'destructive' });
+        toast({ title: t('admin.products.error'), description: t('admin.products.quantityMustBePositive'), variant: 'destructive' });
         return false;
       }
     }
     return true;
-  }, [formData, toast]);
+  }, [formData, toast, t]);
 
-  const handleAddProduct = useCallback(async () => {
-    if (!validateForm()) return;
-    
+  const handleAddProduct = useCallback(async (data: ProductFormData) => {
     setSubmitting(true);
     try {
       const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        quantity: formData.quantity ? parseInt(formData.quantity) : undefined,
+        ...data,
+        price: parseFloat(data.price),
+        quantity: data.quantity ? parseInt(data.quantity) : undefined,
+        preparationTime: data.preparationTime ? parseInt(data.preparationTime) : undefined,
+        calories: data.calories ? parseInt(data.calories) : undefined
       };
-      
-      // console.log('📤 Frontend: Sending product data:', productData);
-      // console.log('🖼️ Frontend: Image URL:', productData.image);
-      // console.log('🖼️ Frontend: Image URL length:', productData.image.length);
-      // console.log('🖼️ Frontend: Image URL type:', typeof productData.image);
 
       const newProduct = await apiFetch('/products', {
         method: 'POST',
         body: JSON.stringify(productData)
       });
 
-      // console.log('📥 Frontend: Received product response:', newProduct);
       setProducts(prev => [newProduct, ...prev]);
-      toast({ title: 'Muvaffaqiyatli', description: 'Mahsulot qo\'shildi' });
+      toast({ title: t('admin.products.success'), description: t('admin.products.productAdded') });
       setIsAddModalOpen(false);
       resetForm();
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ Frontend: Error creating product:', err);
-      toast({ title: 'Xato', description: err.message || 'Mahsulot qo\'shishda xato', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: err.message || t('admin.products.addError'), variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
-  }, [formData, toast, resetForm]);
+  }, [toast, resetForm, t]);
 
-  const handleEditProduct = useCallback(async () => {
+  const handleEditProduct = useCallback(async (data: ProductFormData) => {
     if (!editingProduct) return;
-    if (!validateForm()) return;
-    
     setSubmitting(true);
     try {
       const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        quantity: formData.quantity ? parseInt(formData.quantity) : undefined,
+        ...data,
+        price: parseFloat(data.price),
+        quantity: data.quantity ? parseInt(data.quantity) : undefined,
+        preparationTime: data.preparationTime ? parseInt(data.preparationTime) : undefined,
+        calories: data.calories ? parseInt(data.calories) : undefined,
+        // Ensure all fields are sent, even if empty or default
+        fullDescription: data.fullDescription || '',
+        types: data.types || [],
+        ingredients: data.ingredients || [],
+        preparationMethod: data.preparationMethod || '',
+        allergens: data.allergens || [],
+        tags: data.tags || [],
+        additionalImages: data.additionalImages || [],
+        metaTitle: data.metaTitle || '',
+        metaDescription: data.metaDescription || ''
       };
-      
       await apiFetch(`/products/${editingProduct._id}`, {
         method: 'PUT',
         body: JSON.stringify(productData)
       });
-      toast({ title: 'Muvaffaqiyatli', description: 'Mahsulot muvaffaqiyatli tahrirlandi' });
+      toast({ title: t('admin.products.success'), description: t('admin.products.productUpdated') });
       setIsEditModalOpen(false);
       setEditingProduct(null);
       resetForm();
       fetchProducts();
     } catch (err: any) {
-      toast({ title: 'Xato', description: err.message || 'Mahsulot tahrirlashda xato', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: err.message || t('admin.products.updateError'), variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
-  }, [editingProduct, formData, validateForm, resetForm, toast]);
+  }, [editingProduct, resetForm, toast, fetchProducts, t]);
 
   const handleDeleteProduct = useCallback(async (productId: string) => {
     try {
       await apiFetch(`/products/${productId}`, {
         method: 'DELETE'
       });
-      toast({ title: 'Muvaffaqiyatli', description: 'Mahsulot muvaffaqiyatli o\'chirildi' });
+      toast({ title: t('admin.products.success'), description: t('admin.products.productDeleted') });
       fetchProducts();
     } catch (err: any) {
-      toast({ title: 'Xato', description: err.message || 'Mahsulot o\'chirishda xato', variant: 'destructive' });
+      toast({ title: t('admin.products.error'), description: err.message || t('admin.products.deleteError'), variant: 'destructive' });
     }
-  }, [toast]);
+  }, [toast, t]);
 
   const handleImageUrlChange = useCallback((url: string) => {
     setFormData(prev => ({ ...prev, image: url }));
@@ -324,12 +422,12 @@ const AdminProducts: React.FC = () => {
   // Rasm URL validation
   const validateImageUrl = useCallback((url: string) => {
     if (!url || url.trim() === '') {
-      return { isValid: true, message: 'Rasm URL kiritilmagan (ixtiyoriy)' };
+      return { isValid: true, message: t('admin.products.imageUrlOptional') };
     }
     
     // URL bo'sh emas bo'lsa, to'g'ri deb hisoblaymiz
-    return { isValid: true, message: 'Rasm URL to\'g\'ri' };
-  }, []);
+    return { isValid: true, message: t('admin.products.imageUrlValid') };
+  }, [t]);
 
   const openEditModal = useCallback((product: Product) => {
     // console.log('🔍 Opening edit modal for product:', product);
@@ -355,11 +453,22 @@ const AdminProducts: React.FC = () => {
       nameKey: product.nameKey,
       descriptionKey: product.descriptionKey,
       price: product.price.toString(),
-      image: imageUrl, // To'g'ri URL ni o'rnatamiz
+      image: imageUrl,
       category: normalizeCategory(product.category),
       rating: product.rating,
       quantity: product.quantity ? product.quantity.toString() : '',
-      isAvailable: product.isAvailable
+      isAvailable: product.isAvailable,
+      fullDescription: product.fullDescription || '',
+      types: product.types || [],
+      ingredients: product.ingredients || [],
+      preparationMethod: product.preparationMethod || '',
+      preparationTime: product.preparationTime ? product.preparationTime.toString() : '15',
+      calories: product.calories ? product.calories.toString() : '',
+      allergens: product.allergens || [],
+      tags: product.tags || [],
+      additionalImages: product.additionalImages || [],
+      metaTitle: product.metaTitle || '',
+      metaDescription: product.metaDescription || ''
     });
     // console.log('📝 Form data set with image:', imageUrl);
     setIsEditModalOpen(true);
@@ -420,218 +529,28 @@ const AdminProducts: React.FC = () => {
       <div className="admin-header mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="admin-title text-2xl md:text-3xl font-bold">Mahsulotlar boshqaruvi</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Mahsulotlarni qo'shish, tahrirlash va boshqarish</p>
+            <h1 className="admin-title text-2xl md:text-3xl font-bold">{t('admin.products.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{t('admin.products.description')}</p>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
               <Button onClick={openAddModal} className="admin-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 <Plus className="w-4 h-4 mr-2" />
-                Yangi mahsulot
+                {t('admin.products.addProduct')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="admin-modal max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="admin-modal max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-xl">
                   <Plus className="w-5 h-5 text-blue-600" />
-                  Yangi mahsulot qo'shish
+                  {t('admin.products.addProduct')}
                 </DialogTitle>
               </DialogHeader>
-              <div className="admin-form space-y-6">
-                {/* Mahsulot nomi */}
-                <div className="admin-form-group">
-                  <Label htmlFor="nameKey" className="text-sm font-semibold">Mahsulot nomi</Label>
-                  <Input
-                    id="nameKey"
-                    value={formData.nameKey}
-                    onChange={(e) => setFormData({ ...formData, nameKey: e.target.value })}
-                    placeholder="Mahsulot nomini kiriting"
-                    className="admin-form-input"
-                  />
-                </div>
-
-                {/* Tavsif */}
-                <div className="admin-form-group">
-                  <Label htmlFor="descriptionKey" className="text-sm font-semibold">Tavsif</Label>
-                  <Textarea
-                    id="descriptionKey"
-                    value={formData.descriptionKey}
-                    onChange={(e) => setFormData({ ...formData, descriptionKey: e.target.value })}
-                    placeholder="Mahsulot tavsifini kiriting"
-                    className="admin-form-input"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Narx va miqdori */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="admin-form-group">
-                    <Label htmlFor="price" className="text-sm font-semibold">Narx (UZS)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="Narxni kiriting"
-                      className="admin-form-input"
-                    />
-                  </div>
-                  <div className="admin-form-group">
-                    <Label htmlFor="quantity" className="text-sm font-semibold">Miqdori (ixtiyoriy)</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      placeholder="Miqdori (bo'sh qoldirish mumkin)"
-                      className="admin-form-input"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Agar kiritilmasa, menuda miqdori ko'rsatilmaydi</p>
-                  </div>
-                </div>
-
-                {/* Rasm */}
-                <div className="admin-form-group">
-                  <Label className="flex items-center gap-2 text-sm font-semibold">
-                    <ImageIcon className="w-4 h-4" />
-                    Mahsulot rasmi (ixtiyoriy)
-                  </Label>
-                  <Input
-                    value={formData.image}
-                    onChange={(e) => handleImageUrlChange(e.target.value)}
-                    placeholder="Rasm URL manzilini kiriting (ixtiyoriy)"
-                    className="admin-form-input"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Rasm URL manzilini kiriting (ixtiyoriy, nima kiritilsa, shu saqlanadi)</p>
-                  
-                  {/* Rasm Preview */}
-                  <div className="relative inline-block mt-3">
-                    {formData.image ? (
-                      <div className="relative">
-                        <img
-                          src={formData.image}
-                          alt="Mahsulot rasmi"
-                          className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                        <div className="hidden w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                          <div className="text-center">
-                            <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                            <p className="text-xs text-gray-500">Rasm yuklanmadi</p>
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full"
-                          onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                        <div className="text-center">
-                          <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                          <p className="text-xs text-gray-500">Rasm yo'q</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Rasm URL Validation */}
-                  {formData.image && (
-                    <div className="mt-2">
-                      {(() => {
-                        const validation = validateImageUrl(formData.image);
-                        return (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs">
-                              <div className={`w-2 h-2 rounded-full ${validation.isValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                              <span className={validation.isValid ? 'text-green-600' : 'text-red-600'}>
-                                {validation.isValid ? 'Rasm URL to\'g\'ri' : validation.message}
-                              </span>
-                            </div>
-                            <div className="text-xs text-blue-600">
-                              💾 URL to'g'ridan-to'g'ri saqlanadi
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-                </div>
-
-                {/* Kategoriya va reyting */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="admin-form-group">
-                    <Label htmlFor="category" className="text-sm font-semibold">Kategoriya</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                      <SelectTrigger className="admin-form-input">
-                        <SelectValue placeholder="Kategoriyani tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.slice(1).map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            <span className="flex items-center gap-2">
-                              <span>{category.icon}</span>
-                              <span>{category.label}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="admin-form-group">
-                    <Label htmlFor="rating" className="text-sm font-semibold">Reyting</Label>
-                    <Select value={formData.rating.toString()} onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}>
-                      <SelectTrigger className="admin-form-input">
-                        <SelectValue placeholder="Reytingni tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ratingOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value.toString()}>
-                            <div className="flex items-center gap-2">
-                              {getRatingStars(option.stars)}
-                              <span>{option.label}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Mavjudlik */}
-                <div className="admin-form-group">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="isAvailable" className="text-sm font-semibold">Mavjud</Label>
-                    <Switch
-                      id="isAvailable"
-                      checked={formData.isAvailable}
-                      onCheckedChange={(value) => setFormData({ ...formData, isAvailable: value })}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.isAvailable ? 'Mahsulot mavjud va sotuvda' : 'Mahsulot mavjud emas'}
-                  </p>
-                </div>
-
-                {/* Amallar */}
-                <div className="flex gap-3 pt-4">
-                  <Button onClick={handleAddProduct} disabled={submitting} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                    {submitting ? 'Qo\'shilmoqda...' : 'Qo\'shish'}
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsAddModalOpen(false)} className="flex-1">
-                    Bekor qilish
-                  </Button>
-                </div>
-              </div>
+              <ProductForm
+                onSubmit={handleAddProduct}
+                onCancel={() => setIsAddModalOpen(false)}
+                loading={submitting}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -641,7 +560,7 @@ const AdminProducts: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border shadow-sm mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-lg">Filtrlash va qidirish</h3>
+          <h3 className="font-semibold text-lg">{t('admin.products.filters')}</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -649,7 +568,7 @@ const AdminProducts: React.FC = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Mahsulot nomi yoki tavsifi"
+              placeholder={t('admin.products.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -660,10 +579,10 @@ const AdminProducts: React.FC = () => {
           <div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Barcha kategoriyalar" />
+                <SelectValue placeholder={t('admin.products.allCategories')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">🍽️ Barcha kategoriyalar</SelectItem>
+                <SelectItem value="all">🍽️ {t('admin.products.allCategories')}</SelectItem>
                 {categories.slice(1).map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     <span className="flex items-center gap-2">
@@ -680,28 +599,28 @@ const AdminProducts: React.FC = () => {
           <div>
             <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Barcha mavjudliklar" />
+                <SelectValue placeholder={t('admin.products.allAvailability')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Barcha mavjudliklar</SelectItem>
+                <SelectItem value="all">{t('admin.products.allAvailability')}</SelectItem>
                 <SelectItem value="available">
                   <span className="flex items-center gap-2">
                     <Eye className="w-4 h-4 text-green-600" />
-                    Mavjud
+                    {t('admin.products.available')}
                   </span>
                 </SelectItem>
                 <SelectItem value="unavailable">
                   <span className="flex items-center gap-2">
                     <EyeOff className="w-4 h-4 text-red-600" />
-                    Mavjud emas
+                    {t('admin.products.unavailable')}
                   </span>
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* View Mode */}
-          <div className="flex items-center gap-2">
+          {/* View Mode - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-2">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
@@ -724,12 +643,12 @@ const AdminProducts: React.FC = () => {
         {/* Results Count */}
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            {`${filteredProducts.length} ta mahsulot / ${products.length} ta umumiy`}
+            {t('admin.products.resultsCount', { filtered: filteredProducts.length, total: products.length })}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={fetchProducts}>
-              <Loader2 className="w-4 h-4 mr-2" />
-              Yangilash
+              <RefreshCw className="w-4 h-4 mr-2" />
+              {t('admin.products.refresh', 'Refresh')}
             </Button>
           </div>
         </div>
@@ -740,8 +659,8 @@ const AdminProducts: React.FC = () => {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-            <p className="text-lg font-medium">Mahsulotlar yuklanmoqda...</p>
-            <p className="text-sm text-gray-500">Iltimos, kuting</p>
+            <p className="text-lg font-medium">{t('admin.products.loading')}</p>
+            <p className="text-sm text-gray-500">{t('admin.products.pleaseWait')}</p>
           </div>
         </div>
       ) : error ? (
@@ -749,16 +668,16 @@ const AdminProducts: React.FC = () => {
           <div className="text-red-500 mb-4 text-lg">{error}</div>
           <Button onClick={fetchProducts} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
-            Qayta urinish
+            {t('admin.products.retry')}
           </Button>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-16">
           <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium mb-2">Mahsulot topilmadi</h3>
-          <p className="text-gray-500 mb-4">Qidiruv natijalariga mos mahsulot yo'q</p>
+          <h3 className="text-lg font-medium mb-2">{t('admin.products.noProducts')}</h3>
+          <p className="text-gray-500 mb-4">{t('admin.products.noResults')}</p>
           <Button onClick={() => { setSearchTerm(''); setSelectedCategory('all'); setAvailabilityFilter('all'); }}>
-            Filtrlarni tozalash
+            {t('admin.products.clearFilters')}
           </Button>
         </div>
       ) : (
@@ -766,7 +685,20 @@ const AdminProducts: React.FC = () => {
           ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
           : "space-y-4"
         }>
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product) => {
+            const productName =
+              product[`name_${lang}`] ||
+              product.name_uz ||
+              product.name_ru ||
+              product.name_en ||
+              '';
+            const productDescription =
+              product[`description_${lang}`] ||
+              product.description_uz ||
+              product.description_ru ||
+              product.description_en ||
+              '';
+            return (
             <div key={product._id} className={viewMode === 'grid' 
               ? "bg-white dark:bg-slate-800 rounded-xl border shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 group" 
               : "bg-white dark:bg-slate-800 rounded-xl border shadow-sm p-6 hover:shadow-lg transition-all duration-200"
@@ -778,7 +710,7 @@ const AdminProducts: React.FC = () => {
                     {product.image ? (
                       <img 
                         src={getImageUrl(product.image)} 
-                        alt={product.nameKey}
+                          alt={productName}
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -789,7 +721,7 @@ const AdminProducts: React.FC = () => {
                     <div className={`${product.image ? 'hidden' : ''} w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
                       <div className="text-center">
                         <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Rasm yo'q</p>
+                        <p className="text-sm text-gray-500">{t('admin.products.noImage')}</p>
                       </div>
                     </div>
                     <div className="absolute top-3 right-3 flex flex-col gap-2">
@@ -800,27 +732,25 @@ const AdminProducts: React.FC = () => {
                         {product.isAvailable ? (
                           <span className="flex items-center gap-1">
                             <Eye className="w-3 h-3" />
-                            Mavjud
+                            {t('admin.products.available')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
                             <EyeOff className="w-3 h-3" />
-                            Mavjud emas
+                            {t('admin.products.unavailable')}
                           </span>
                         )}
                       </Badge>
                     </div>
                     {!product.isAvailable && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <Badge variant="destructive" className="text-lg">Mavjud emas</Badge>
+                        <Badge variant="destructive" className="text-lg">{t('admin.products.unavailable')}</Badge>
                       </div>
                     )}
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.nameKey}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                      {product.descriptionKey}
-                    </p>
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-1">{productName}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{productDescription}</p>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1">
                         {getRatingStars(product.rating)}
@@ -828,12 +758,12 @@ const AdminProducts: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-lg text-green-600">
-                          {product.price.toLocaleString()} so'm
+                          {product.price.toLocaleString()} {t('admin.products.currency')}
                         </div>
                         <div className="text-xs text-gray-500">
                           <span className="flex items-center gap-1">
                             <ShoppingCart className="w-3 h-3" />
-                            {product.quantity > 0 ? `${product.quantity} dona` : 'Miqdori ko\'rsatilmagan'}
+                            {product.quantity > 0 ? t('admin.products.quantityCount', { count: product.quantity }) : t('admin.products.quantityNotSpecified')}
                           </span>
                         </div>
                       </div>
@@ -850,15 +780,15 @@ const AdminProducts: React.FC = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Mahsulotni o'chirish</AlertDialogTitle>
+                            <AlertDialogTitle>{t('admin.products.deleteProduct')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              "{product.nameKey}" mahsulotini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.
+                                {t('admin.products.deleteConfirm', { name: productName })}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                            <AlertDialogCancel>{t('admin.products.cancel')}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => handleDeleteProduct(product._id)}>
-                              O'chirish
+                              {t('admin.products.delete')}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -873,7 +803,7 @@ const AdminProducts: React.FC = () => {
                     {product.image ? (
                       <img 
                         src={getImageUrl(product.image)} 
-                        alt={product.nameKey}
+                          alt={productName}
                         className="w-20 h-20 object-cover rounded-lg"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -895,19 +825,17 @@ const AdminProducts: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="font-semibold text-lg">{product.nameKey}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                          {product.descriptionKey}
-                        </p>
+                          <h3 className="font-semibold text-lg">{productName}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{productDescription}</p>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-lg text-green-600">
-                          {product.price.toLocaleString()} so'm
+                          {product.price.toLocaleString()} {t('admin.products.currency')}
                         </div>
                         <div className="text-xs text-gray-500">
                           <span className="flex items-center gap-1">
                             <ShoppingCart className="w-3 h-3" />
-                            {product.quantity > 0 ? `${product.quantity} dona` : 'Miqdori ko\'rsatilmagan'}
+                            {product.quantity > 0 ? t('admin.products.quantityCount', { count: product.quantity }) : t('admin.products.quantityNotSpecified')}
                           </span>
                         </div>
                       </div>
@@ -922,7 +850,7 @@ const AdminProducts: React.FC = () => {
                           <span className="text-xs text-gray-500">({product.rating})</span>
                         </div>
                         <Badge variant={product.isAvailable ? "default" : "destructive"} className="text-xs">
-                          {product.isAvailable ? 'Mavjud' : 'Mavjud emas'}
+                          {product.isAvailable ? t('admin.products.available') : t('admin.products.unavailable')}
                         </Badge>
                       </div>
                       <div className="flex gap-2">
@@ -937,15 +865,15 @@ const AdminProducts: React.FC = () => {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Mahsulotni o'chirish</AlertDialogTitle>
+                              <AlertDialogTitle>{t('admin.products.deleteProduct')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                "{product.nameKey}" mahsulotini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.
+                                  {t('admin.products.deleteConfirm', { name: productName })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                              <AlertDialogCancel>{t('admin.products.cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDeleteProduct(product._id)}>
-                                O'chirish
+                                {t('admin.products.delete')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -956,214 +884,55 @@ const AdminProducts: React.FC = () => {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="admin-modal max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="admin-modal max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Pencil className="w-5 h-5 text-blue-600" />
-              Mahsulotni tahrirlash
+              {t('admin.products.editProduct')}
             </DialogTitle>
           </DialogHeader>
-          <div className="admin-form space-y-6">
-            {/* Mahsulot nomi */}
-            <div className="admin-form-group">
-              <Label htmlFor="edit-nameKey" className="text-sm font-semibold">Mahsulot nomi</Label>
-              <Input
-                id="edit-nameKey"
-                value={formData.nameKey}
-                onChange={(e) => setFormData({ ...formData, nameKey: e.target.value })}
-                placeholder="Mahsulot nomini kiriting"
-                className="admin-form-input"
-              />
-            </div>
-
-            {/* Tavsif */}
-            <div className="admin-form-group">
-              <Label htmlFor="edit-descriptionKey" className="text-sm font-semibold">Tavsif</Label>
-              <Textarea
-                id="edit-descriptionKey"
-                value={formData.descriptionKey}
-                onChange={(e) => setFormData({ ...formData, descriptionKey: e.target.value })}
-                placeholder="Mahsulot tavsifini kiriting"
-                className="admin-form-input"
-                rows={3}
-              />
-            </div>
-
-            {/* Narx va miqdori */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="admin-form-group">
-                <Label htmlFor="edit-price" className="text-sm font-semibold">Narx (UZS)</Label>
-                <Input
-                  id="edit-price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="Narxni kiriting"
-                  className="admin-form-input"
-                />
-              </div>
-              <div className="admin-form-group">
-                <Label htmlFor="edit-quantity" className="text-sm font-semibold">Miqdori (ixtiyoriy)</Label>
-                <Input
-                  id="edit-quantity"
-                  type="number"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                  placeholder="Miqdori (bo'sh qoldirish mumkin)"
-                  className="admin-form-input"
-                />
-                <p className="text-xs text-gray-500 mt-1">Agar kiritilmasa, menuda miqdori ko'rsatilmaydi</p>
-              </div>
-            </div>
-
-            {/* Rasm */}
-            <div className="admin-form-group">
-              <Label className="flex items-center gap-2 text-sm font-semibold">
-                <ImageIcon className="w-4 h-4" />
-                Mahsulot rasmi (ixtiyoriy)
-              </Label>
-              <Input
-                value={formData.image}
-                onChange={(e) => handleImageUrlChange(e.target.value)}
-                placeholder="Rasm URL manzilini kiriting (ixtiyoriy)"
-                className="admin-form-input"
-              />
-              <p className="text-xs text-gray-500 mt-1">Rasm URL manzilini kiriting (ixtiyoriy, nima kiritilsa, shu saqlanadi)</p>
-              
-              {/* Rasm Preview */}
-              <div className="relative inline-block mt-3">
-                {formData.image ? (
-                  <div className="relative">
-                    <img
-                      src={formData.image}
-                      alt="Mahsulot rasmi"
-                      className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="hidden w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                      <div className="text-center">
-                        <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                        <p className="text-xs text-gray-500">Rasm yuklanmadi</p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full"
-                      onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                    <div className="text-center">
-                      <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                      <p className="text-xs text-gray-500">Rasm yo'q</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Rasm URL Validation */}
-              {formData.image && (
-                <div className="mt-2">
-                  {(() => {
-                    const validation = validateImageUrl(formData.image);
-                    return (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs">
-                          <div className={`w-2 h-2 rounded-full ${validation.isValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                          <span className={validation.isValid ? 'text-green-600' : 'text-red-600'}>
-                            {validation.isValid ? 'Rasm URL to\'g\'ri' : validation.message}
-                          </span>
-                        </div>
-                        <div className="text-xs text-blue-600">
-                          💾 URL to'g'ridan-to'g'ri saqlanadi
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-
-            {/* Kategoriya va reyting */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="admin-form-group">
-                <Label htmlFor="edit-category" className="text-sm font-semibold">Kategoriya</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger className="admin-form-input">
-                    <SelectValue placeholder="Kategoriyani tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.slice(1).map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        <span className="flex items-center gap-2">
-                          <span>{category.icon}</span>
-                          <span>{category.label}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="admin-form-group">
-                <Label htmlFor="edit-rating" className="text-sm font-semibold">Reyting</Label>
-                <Select value={formData.rating.toString()} onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}>
-                  <SelectTrigger className="admin-form-input">
-                    <SelectValue placeholder="Reytingni tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ratingOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value.toString()}>
-                        <div className="flex items-center gap-2">
-                          {getRatingStars(option.stars)}
-                          <span>{option.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Mavjudlik */}
-            <div className="admin-form-group">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="edit-isAvailable" className="text-sm font-semibold">Mavjud</Label>
-                <Switch
-                  id="edit-isAvailable"
-                  checked={formData.isAvailable}
-                  onCheckedChange={(value) => setFormData({ ...formData, isAvailable: value })}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {formData.isAvailable ? 'Mahsulot mavjud va sotuvda' : 'Mahsulot mavjud emas'}
-              </p>
-            </div>
-
-            {/* Amallar */}
-            <div className="flex gap-3 pt-4">
-              <Button onClick={handleEditProduct} disabled={submitting} className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
-                {submitting ? 'Tahrirlanmoqda...' : 'Tahrirlash'}
-              </Button>
-              <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">
-                Bekor qilish
-              </Button>
-            </div>
-          </div>
+          <ProductForm
+            onSubmit={handleEditProduct}
+            onCancel={() => {
+              setIsEditModalOpen(false);
+              setEditingProduct(null);
+            }}
+            loading={submitting}
+            initialData={editingProduct ? {
+              nameKey: editingProduct.nameKey,
+              descriptionKey: editingProduct.descriptionKey,
+              name_uz: editingProduct.name_uz || '',
+              name_ru: editingProduct.name_ru || '',
+              name_en: editingProduct.name_en || '',
+              description_uz: editingProduct.description_uz || '',
+              description_ru: editingProduct.description_ru || '',
+              description_en: editingProduct.description_en || '',
+              price: editingProduct.price.toString(),
+              image: editingProduct.image,
+              category: normalizeCategory(editingProduct.category),
+              rating: editingProduct.rating,
+              quantity: editingProduct.quantity ? editingProduct.quantity.toString() : '',
+              isAvailable: editingProduct.isAvailable,
+              fullDescription: editingProduct.fullDescription || '',
+              types: editingProduct.types || [],
+              ingredients: editingProduct.ingredients || [],
+              preparationMethod: editingProduct.preparationMethod || '',
+              preparationTime: editingProduct.preparationTime ? editingProduct.preparationTime.toString() : '15',
+              calories: editingProduct.calories ? editingProduct.calories.toString() : '',
+              allergens: editingProduct.allergens || [],
+              tags: editingProduct.tags || [],
+              additionalImages: editingProduct.additionalImages || [],
+              metaTitle: editingProduct.metaTitle || '',
+              metaDescription: editingProduct.metaDescription || ''
+            } : undefined}
+          />
         </DialogContent>
       </Dialog>
     </div>

@@ -109,62 +109,24 @@ export const getStatusText = (status: string) => {
 
 // Admin panel uchun status tarjima funksiyasi - har doim o'zbek tilida
 export const getAdminStatusText = (status: string) => {
-  switch (status.toLowerCase()) {
-    // Buyurtmalar uchun
-    case 'pending':
-      return 'Kutilmoqda';
-    case 'confirmed':
-      return 'Tasdiqlangan';
-    case 'processing':
-      return 'Jarayonda';
-    case 'preparing':
-      return 'Tayyorlanmoqda';
-    case 'ready':
-      return 'Tayyor';
-    case 'shipped':
-      return 'Yuborildi';
-    case 'outfordelivery':
-      return 'Yetkazib berilmoqda';
-    case 'delivered':
-      return 'Yetkazildi';
-    case 'cancelled':
-      return 'Bekor qilindi';
-    
-    // Rezervatsiyalar uchun
-    case 'seated':
-      return 'O\'tirgan';
-    case 'noshow':
-      return 'Kelmay qoldi';
-    
-    // To'lovlar uchun
-    case 'payment_completed':
-      return 'To\'landi';
-    case 'failed':
-      return 'Xatolik';
-    case 'refunded':
-      return 'Qaytarilgan';
-    
-    // Xabarlar uchun
-    case 'new':
-      return 'Yangi';
-    case 'read':
-      return 'O\'qildi';
-    case 'replied':
-      return 'Javob berildi';
-    
-    // Foydalanuvchilar uchun
-    case 'active':
-      return 'Faol';
-    case 'inactive':
-      return 'Faol emas';
-    
-    // Umumiy completed - kontekstga qarab
-    case 'completed':
-      // Bu yerda kontekstni aniqlash uchun qo'shimcha logika kerak
-      // Hozircha rezervatsiyalar uchun deb hisoblaymiz
-      return 'Bajarilgan';
-    
-    default:
-      return status;
+  // Normalize status key (e.g. Pending -> pending)
+  const key = status.replace(/([A-Z])/g, '_$1').replace(/^_/, '').toLowerCase();
+  // Try orders, reservations, payments, messages
+  const statusKeys = [
+    `admin.orders.status_${key}`,
+    `admin.reservations.status_${key}`,
+    `admin.payments.status_${key}`,
+    `admin.messages.status_${key}`,
+    `admin_status_${key}`,
+    `payment_status_${key}`
+  ];
+  for (const k of statusKeys) {
+    const translated = i18n.t(k);
+    if (translated && translated !== k) return translated;
   }
+  // Fallback to Uzbek if available
+  const uz = i18n.getResource('uz', 'translation', statusKeys[0]);
+  if (uz) return uz;
+  // Fallback to status itself
+  return status;
 };

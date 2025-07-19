@@ -1,26 +1,47 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MapPin, Phone, Mail, Clock, Heart, Facebook, Instagram, Twitter, Send } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const socialLinks = [
-  { name: 'Facebook', url: 'https://facebook.com/everestrestaurant' },
-  { name: 'Instagram', url: 'https://instagram.com/everestrestaurant' },
-  { name: 'Twitter', url: 'https://twitter.com/everestrest' },
-  { name: 'TikTok', url: 'https://tiktok.com/@everestrestaurant' },
+  { 
+    name: 'Facebook', 
+    url: 'https://facebook.com/everestrestaurant',
+    icon: Facebook
+  },
+  { 
+    name: 'Instagram', 
+    url: 'https://instagram.com/everestrestaurant',
+    icon: Instagram
+  },
+  { 
+    name: 'Twitter', 
+    url: 'https://twitter.com/everestrest',
+    icon: Twitter
+  },
+  { 
+    name: 'Telegram', 
+    url: 'https://t.me/everestrestaurant',
+    icon: Send
+  },
 ];
 
 const Footer = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   
   const quickLinks = [
     { name: t('footer_link_menu'), to: '/menu' },
     { name: t('footer_link_reservations'), to: '/reservations' },
     { name: t('nav_contact'), to: '/contact' },
+    { name: t('nav_about'), to: '/about' },
   ];
 
   return (
-    <footer className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-white/10">
+    <footer
+      className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-white/10"
+      style={{ paddingBottom: 24 }} 
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
@@ -38,18 +59,21 @@ const Footer = () => {
               {t('footer_description')}
             </p>
             <div className="flex space-x-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg flex items-center justify-center text-slate-600 dark:text-white hover:bg-yellow-400 hover:text-slate-900 transition-all duration-200"
-                  aria-label={social.name}
-                >
-                  <span className="text-sm font-semibold">{social.name[0]}</span>
-                </a>
-              ))}
+              {socialLinks.map((social) => {
+                const IconComponent = social.icon;
+                return (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 bg-slate-200 dark:bg-white/5 rounded-lg flex items-center justify-center text-slate-600 dark:text-white hover:bg-yellow-400 hover:text-slate-900 transition-all duration-200"
+                    aria-label={social.name}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -75,7 +99,7 @@ const Footer = () => {
                 <Mail className="w-5 h-5 text-yellow-400 mt-1" />
                 <div>
                   <p className="text-slate-800 dark:text-white font-medium">{t('footer_email_title')}</p>
-                  <p className="text-slate-500 dark:text-gray-400 text-sm">mustafoyev@gmail.com</p>
+                  <p className="text-slate-500 dark:text-gray-400 text-sm">mustafoyev7788@gmail.com</p>
                 </div>
               </div>
             </div>
@@ -94,7 +118,7 @@ const Footer = () => {
                 <Clock className="w-4 h-4 text-yellow-400" />
                 <span className="text-slate-800 dark:text-white text-sm">{t('footer_hours_fri_sun')}</span>
               </div>
-              <p className="text-slate-500 dark:text-gray-400 text-sm ml-6">5:00 PM - 23:59 PM</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm ml-6">5:00 PM - 00:00 PM</p>
             </div>
 
             <div className="space-y-2">
@@ -103,7 +127,11 @@ const Footer = () => {
                 <Link
                   key={link.name}
                   to={link.to}
-                  className="block text-slate-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200 text-sm"
+                  className={`block transition-colors duration-200 text-sm ${
+                    location.pathname === link.to 
+                      ? 'text-yellow-500 dark:text-yellow-400' 
+                      : 'text-slate-500 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400'
+                  }`}
                 >
                   {link.name}
                 </Link>
@@ -115,7 +143,37 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-slate-200 dark:border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-500 dark:text-gray-400 text-sm mb-4 md:mb-0">
-            {t('footer_copyright')} | <Link to="/privacy-policy" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('footer_privacy_policy')}</Link> | <Link to="/contact" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('nav_contact')}</Link> | <Link to="/terms-of-service" className="hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors duration-200">{t('footer_terms')}</Link>
+            {t('footer_copyright')} | 
+            <Link 
+              to="/privacy-policy" 
+              className={`transition-colors duration-200 ${
+                location.pathname === '/privacy-policy' 
+                  ? 'text-yellow-500 dark:text-yellow-400' 
+                  : 'hover:text-yellow-500 dark:hover:text-yellow-400'
+              }`}
+            >
+              {t('footer_privacy_policy')}
+            </Link> | 
+            <Link 
+              to="/contact" 
+              className={`transition-colors duration-200 ${
+                location.pathname === '/contact' 
+                  ? 'text-yellow-500 dark:text-yellow-400' 
+                  : 'hover:text-yellow-500 dark:hover:text-yellow-400'
+              }`}
+            >
+              {t('nav_contact')}
+            </Link> | 
+            <Link 
+              to="/terms-of-service" 
+              className={`transition-colors duration-200 ${
+                location.pathname === '/terms-of-service' 
+                  ? 'text-yellow-500 dark:text-yellow-400' 
+                  : 'hover:text-yellow-500 dark:hover:text-yellow-400'
+              }`}
+            >
+              {t('footer_terms')}
+            </Link>
           </p>
           <div className="flex items-center space-x-2 text-slate-500 dark:text-gray-400 text-sm">
             <span>{t('footer_by')}</span>

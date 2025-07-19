@@ -9,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 const Register = () => {
   const { t } = useTranslation();
@@ -18,7 +19,6 @@ const Register = () => {
 
   const [step, setStep] = useState<'form' | 'verify' | 'set-password'>('form');
   const [manualData, setManualData] = useState({ name: '', email: '', password: '' });
-  const [googleUserData, setGoogleUserData] = useState<any>(null); // { name, email, googleId }
   const [verifyEmail, setVerifyEmail] = useState('');
   const [isManual, setIsManual] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const Register = () => {
     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
     try {
-      const res = await fetch('/api/auth/signup/manual', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -57,46 +57,31 @@ const Register = () => {
     }
   };
 
-  // Step 1: Google signup
-  const handleGoogleSignup = async () => {
-    // Open Google OAuth window
-    window.location.href = '/api/auth/google';
-    // After OAuth, backend should redirect to /verify with tempData param
-    // You need to handle this in your OAuth callback and frontend routing
-  };
-
-  // Step 2: Code verification
+  // Step 2: Verify code
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/verify-email', {
+      const res = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: verifyEmail, code, isManual }),
+        body: JSON.stringify({ email: verifyEmail, code }),
       });
       const data = await res.json();
-      if (res.ok && data.verified && isManual) {
-        localStorage.setItem('token', data.token);
-        if (data.user && data.token && manualLogin) {
-          manualLogin(data.user, data.token);
-        }
-        toast({ title: t('register_success_toast_title'), description: t('register_success_toast_description') });
-        navigate('/');
-      } else if (res.ok && data.verified && !isManual) {
-        setGoogleUserData({ name: data.name, email: data.email, googleId: data.googleId });
+      if (res.ok) {
         setStep('set-password');
+        toast({ title: t('verify_success_title'), description: t('verify_success_description') });
       } else {
-        toast({ title: t('register_fail_toast_title'), description: data.message || t('register_fail_toast_description'), variant: 'destructive' });
+        toast({ title: t('verify_error_title'), description: data.message || t('verify_error_description'), variant: 'destructive' });
       }
     } catch (err) {
-      toast({ title: t('register_fail_toast_title'), description: t('register_fail_toast_description'), variant: 'destructive' });
+      toast({ title: t('verify_error_title'), description: t('verify_network_error'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 3: Set password (Google signup only)
+  // Step 3: Set password
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -104,23 +89,23 @@ const Register = () => {
       const res = await fetch('/api/auth/set-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...googleUserData, password }),
+        body: JSON.stringify({ email: verifyEmail, password }),
       });
       const data = await res.json();
       if (res.ok) {
-        toast({ title: t('register_success_toast_title'), description: t('register_success_toast_description') });
-        navigate('/');
+        manualLogin(data.user, data.token);
+        toast({ title: t('set_password_success_title'), description: t('set_password_success_description') });
+        navigate('/profile');
       } else {
-        toast({ title: t('register_fail_toast_title'), description: data.message || t('register_fail_toast_description'), variant: 'destructive' });
+        toast({ title: t('set_password_error_title'), description: data.message || t('set_password_fail_description'), variant: 'destructive' });
       }
     } catch (err) {
-      toast({ title: t('register_fail_toast_title'), description: t('register_fail_toast_description'), variant: 'destructive' });
+      toast({ title: t('set_password_error_title'), description: t('set_password_network_error'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // UI rendering
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Navbar />
@@ -139,15 +124,17 @@ const Register = () => {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('register_form_submit_button')}
-                  </Button>
+                  <Button type="submit" className="w-full" disabled={loading}>{loading ? t('register_form_submitting_button') : t('register_form_submit_button')}</Button>
                 </form>
-                <div className="my-6 text-center text-gray-500">{t('register_or')}</div>
-                <Button type="button" className="w-full flex items-center justify-center gap-2" onClick={handleGoogleSignup}>
-                  <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-5 h-5" />
-                  {t('register_with_google')}
-                </Button>
+                <div className="mt-6 text-center text-sm">
+                  <span className="text-gray-400">{t('register_have_account')}</span>
+                  <span
+                    className="ml-1 text-yellow-500 font-semibold cursor-pointer hover:underline"
+                    onClick={() => navigate('/login')}
+                  >
+                    {t('register_login')}
+                  </span>
+                </div>
               </>
             )}
             {step === 'verify' && (
@@ -158,9 +145,7 @@ const Register = () => {
                     {t('verify_description')} <span className="font-semibold">{verifyEmail}</span>
                   </p>
                   <Input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder={t('verify_code_placeholder')} maxLength={6} className="text-center tracking-widest text-lg" required />
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('verify_button')}
-                  </Button>
+                  <Button type="submit" className="w-full" disabled={loading}>{loading ? t('verify_verifying') : t('verify_button')}</Button>
                 </form>
               </>
             )}
@@ -172,9 +157,7 @@ const Register = () => {
                   <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setShowPassword(v => !v)}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('set_password_button')}
-                  </Button>
+                  <Button type="submit" className="w-full" disabled={loading}>{loading ? t('set_password_setting') : t('set_password_button')}</Button>
                 </form>
               </>
             )}

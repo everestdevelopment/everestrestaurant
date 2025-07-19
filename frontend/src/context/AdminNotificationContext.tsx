@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { io, Socket } from 'socket.io-client';
+import { createSocketManager, getSocketManager, disconnectSocketManager } from '@/lib/socket';
 import { apiFetch } from '@/lib/api';
 
 interface Notification {
@@ -40,162 +40,161 @@ interface AdminNotificationProviderProps {
 }
 
 export const AdminNotificationProvider: React.FC<AdminNotificationProviderProps> = ({ children }) => {
-  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadContactCount, setUnreadContactCount] = useState(0);
-  const [socket, setSocket] = useState<Socket | null>(null);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const formatId = (id: string) => {
-    // Show last 6 characters in uppercase
-    return id.slice(-6).toUpperCase();
-  };
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [socket, setSocket] = useState<any>(null);
+  const { user } = useAuth();
 
   const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
       timestamp: new Date(),
-      read: false
+      read: false,
     };
+    
     setNotifications(prev => [newNotification, ...prev]);
     setUnreadCount(prev => prev + 1);
   };
 
-  const markAsRead = (id: string) => {
+  const markAsRead = (notificationId: string) => {
     setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, read: true }
+          : notification
+      )
     );
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = () => {
     setNotifications(prev => 
-      prev.map(n => ({ ...n, read: true }))
+      prev.map(notification => ({ ...notification, read: true }))
     );
+    setUnreadCount(0);
   };
 
   const clearNotifications = () => {
     setNotifications([]);
+    setUnreadCount(0);
   };
 
   const updateUnreadCount = async () => {
-    if (user?.role !== 'admin') return;
-    
     try {
-      const data = await apiFetch('/admin/contact/unread-count');
-      setUnreadContactCount(data.count || 0);
+      const response = await apiFetch('/admin/notifications/unread-count');
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadCount(data.count);
+      }
     } catch (error) {
-      console.error('Failed to fetch unread contact count:', error);
+      console.error('Error fetching unread count:', error);
     }
   };
 
-  const fetchNotifications = async () => {
-    if (user?.role !== 'admin') return;
-    
-    try {
-      const data = await apiFetch('/admin/notifications');
-      const notificationsArray = Array.isArray(data)
-        ? data
-        : (data.notifications || []);
-      const fetchedNotifications: Notification[] = notificationsArray.map((n: any) => ({
-        id: n._id,
-        type: n.type,
-        title: n.title,
-        message: n.message,
-        data: n.data,
-        timestamp: new Date(n.createdAt),
-        read: n.read,
-      }));
-      setNotifications(fetchedNotifications);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    }
+  const formatId = (id: string) => {
+    return id.slice(-6).toUpperCase();
   };
 
-  // WebSocket connection for real-time notifications
+  // WebSocket connection for real-time updates
   useEffect(() => {
-    if (user?.role === 'admin') {
-      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
-      setSocket(newSocket);
-
-      // Listen for various notification events
-      newSocket.on('order_cancelled', (data) => {
-        addNotification({
-          type: 'order_cancelled',
-          title: 'Buyurtma bekor qilindi',
-          message: `Buyurtma #${formatId(data.orderId)} mijoz tomonidan bekor qilindi`,
-          data: data,
-        });
+    if (user?.role === 'admin' && user?.token) {
+      const socketManager = createSocketManager({
+        url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000',
+        auth: {
+          token: user.token,
+          userId: user._id,
+          role: user.role,
+          name: user.name
+        }
       });
 
-      newSocket.on('reservation_cancelled', (data) => {
-        addNotification({
-          type: 'reservation_cancelled',
-          title: 'Rezervatsiya bekor qilindi',
-          message: `Rezervatsiya #${formatId(data.reservationId)} mijoz tomonidan bekor qilindi`,
-          data: data,
-        });
-      });
+      socketManager.connect()
+        .then((socket) => {
+          setSocket(socket);
+          console.log('✅ Admin notification socket connected');
 
-      newSocket.on('new_order', (data) => {
-        addNotification({
-          type: 'new_order',
-          title: 'Yangi buyurtma',
-          message: `Yangi buyurtma #${formatId(data.orderId)} qabul qilindi`,
-          data: data,
-        });
-      });
+          // Listen for various notification events
+          socketManager.on('order_cancelled', (data) => {
+            addNotification({
+              type: 'order_cancelled',
+              title: 'Buyurtma bekor qilindi',
+              message: `Buyurtma #${formatId(data.orderId)} mijoz tomonidan bekor qilindi`,
+              data: data,
+            });
+          });
 
-      newSocket.on('new_reservation', (data) => {
-        addNotification({
-          type: 'new_reservation',
-          title: 'Yangi rezervatsiya',
-          message: `Rezervatsiya #${formatId(data.reservationId)} qabul qilindi`,
-          data: data,
-        });
-      });
+          socketManager.on('reservation_cancelled', (data) => {
+            addNotification({
+              type: 'reservation_cancelled',
+              title: 'Rezervatsiya bekor qilindi',
+              message: `Rezervatsiya #${formatId(data.reservationId)} mijoz tomonidan bekor qilindi`,
+              data: data,
+            });
+          });
 
-      newSocket.on('payment_received', (data) => {
-        addNotification({
-          type: 'payment_received',
-          title: 'To\'lov qabul qilindi',
-          message: `${data.amount.toLocaleString()} so'm to'lov qabul qilindi`,
-          data: data,
-        });
-      });
+          socketManager.on('new_order', (data) => {
+            addNotification({
+              type: 'new_order',
+              title: 'Yangi buyurtma',
+              message: `Yangi buyurtma #${formatId(data.orderId)} qabul qilindi`,
+              data: data,
+            });
+          });
 
-      newSocket.on('contact_message', (data) => {
-        addNotification({
-          type: 'contact_message',
-          title: 'Yangi xabar',
-          message: `${data.name} dan yangi xabar`,
-          data: data,
+          socketManager.on('new_reservation', (data) => {
+            addNotification({
+              type: 'new_reservation',
+              title: 'Yangi rezervatsiya',
+              message: `Rezervatsiya #${formatId(data.reservationId)} qabul qilindi`,
+              data: data,
+            });
+          });
+
+          socketManager.on('payment_received', (data) => {
+            addNotification({
+              type: 'payment_received',
+              title: 'To\'lov qabul qilindi',
+              message: `${data.amount.toLocaleString()} so'm to'lov qabul qilindi`,
+              data: data,
+            });
+          });
+
+          socketManager.on('contact_message', (data) => {
+            addNotification({
+              type: 'contact_message',
+              title: 'Yangi xabar',
+              message: `${data.name} dan yangi xabar`,
+              data: data,
+            });
+            updateUnreadCount(); // Update unread count when new message arrives
+          });
+
+          // Initial unread count fetch
+          updateUnreadCount();
+        })
+        .catch((error) => {
+          console.error('❌ Failed to connect admin notification socket:', error);
         });
-        updateUnreadCount(); // Update unread count when new message arrives
-      });
 
       return () => {
-        newSocket.disconnect();
+        disconnectSocketManager();
+        setSocket(null);
       };
     }
-  }, [user]);
-
-  // Fetch notifications on mount
-  useEffect(() => {
-    fetchNotifications();
-    updateUnreadCount();
   }, [user]);
 
   const value: AdminNotificationContextType = {
     notifications,
     unreadCount,
-    unreadContactCount,
+    unreadContactCount: 0,
     markAsRead,
     markAllAsRead,
     clearNotifications,
     addNotification,
-    fetchNotifications,
+    fetchNotifications: async () => {
+      // Implementation needed
+    },
     updateUnreadCount,
   };
 

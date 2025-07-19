@@ -53,12 +53,12 @@ const Login = () => {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const response = await login(data.email, data.password, true);
+      await login(data.email, data.password);
       toast({
         title: t('login_success_toast_title'),
         description: t('login_success_toast_description'),
       });
-      if (response.user.isAdmin) {
+      if (user && user.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/');

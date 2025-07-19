@@ -105,10 +105,10 @@ const AdminPayments: React.FC = () => {
   // Backend model bilan mos keladigan status options
   const statusOptions = [
     { value: 'all', label: t('admin.payments.allStatuses', 'Barcha holatlari') },
-    { value: 'Pending', label: getAdminStatusText('pending'), color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400', icon: <Clock className="w-4 h-4" /> },
-    { value: 'Completed', label: getAdminStatusText('payment_completed'), color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400', icon: <CheckCircle className="w-4 h-4" /> },
-    { value: 'Failed', label: getAdminStatusText('failed'), color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400', icon: <XCircle className="w-4 h-4" /> },
-    { value: 'Cancelled', label: getAdminStatusText('cancelled'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400', icon: <XCircle className="w-4 h-4" /> },
+    { value: 'pending', label: getAdminStatusText('pending'), color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400', icon: <Clock className="w-4 h-4" /> },
+    { value: 'completed', label: getAdminStatusText('completed'), color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400', icon: <CheckCircle className="w-4 h-4" /> },
+    { value: 'failed', label: getAdminStatusText('failed'), color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400', icon: <XCircle className="w-4 h-4" /> },
+    { value: 'cancelled', label: getAdminStatusText('cancelled'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400', icon: <XCircle className="w-4 h-4" /> },
   ];
 
   const methodOptions = [
@@ -305,8 +305,7 @@ const AdminPayments: React.FC = () => {
         <h1 className="admin-title">{t('admin.payments.title', 'To\'lovlar')}</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchPayments} className="admin-button">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            {t('admin.payments.refresh', 'Yangilash')}
+            <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.payments.refresh', 'Refresh')}
           </Button>
         </div>
       </div>

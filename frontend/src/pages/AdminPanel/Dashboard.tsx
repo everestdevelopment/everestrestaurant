@@ -21,6 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { useAdminNotifications } from '@/context/AdminNotificationContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency, getAdminStatusText } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface DashboardStats {
   totalOrders: number;
@@ -49,6 +50,7 @@ interface DashboardStats {
 }
 
 const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { notifications, unreadCount, markAllAsRead } = useAdminNotifications();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -62,7 +64,7 @@ const AdminDashboard: React.FC = () => {
       setStats(data);
     } catch (err: any) {
       console.error('Dashboard stats error:', err);
-      setError(err.message || 'Statistikalar yuklanmadi');
+      setError(err.message || t('admin.dashboard.statsError'));
     } finally {
       setLoading(false);
     }
@@ -99,7 +101,7 @@ const AdminDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="w-8 h-8 animate-spin" />
-        <span className="ml-2">Statistikalar yuklanmoqda...</span>
+        <span className="ml-2">{t('admin.dashboard.statsLoading')}</span>
       </div>
     );
   }
@@ -110,7 +112,7 @@ const AdminDashboard: React.FC = () => {
         <div className="text-red-500 mb-4">{error}</div>
         <Button onClick={fetchStats} variant="outline">
           <RefreshCw className="w-4 h-4 mr-2" />
-          Qayta urinish
+          {t('admin.dashboard.retry')}
         </Button>
       </div>
     );
@@ -121,17 +123,17 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="admin-section p-4 md:p-6 space-y-6">
       <div className="admin-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="admin-title">Admin paneli</h1>
+        <h1 className="admin-title">{t('admin.dashboard.title')}</h1>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Badge variant="destructive" className="flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
-              {unreadCount} yangi
+              {unreadCount} {t('admin.dashboard.newNotifications')}
             </Badge>
           )}
           <Button variant="outline" size="sm" onClick={fetchStats}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            Yangilash
+            {t('admin.dashboard.refresh', 'Refresh')}
           </Button>
         </div>
       </div>
@@ -140,49 +142,49 @@ const AdminDashboard: React.FC = () => {
       <div className="admin-stats-grid">
         <Card className="admin-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Umumiy buyurtmalar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.dashboard.totalOrders')}</CardTitle>
             <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold">{stats.totalOrders}</div>
-            <div className="text-xs text-muted-foreground">Bugun: {stats.todayOrders}</div>
-            <div className="text-xs text-muted-foreground">Bu oy: {stats.thisMonthOrders}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.today')}: {stats.todayOrders}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.thisMonth')}: {stats.thisMonthOrders}</div>
           </CardContent>
         </Card>
 
         <Card className="admin-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Umumiy daromad</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.dashboard.totalRevenue')}</CardTitle>
             <CreditCard className="w-5 h-5 md:w-6 md:h-6 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-            <div className="text-xs text-muted-foreground">Bugun: {formatCurrency(stats.todayRevenue)}</div>
-            <div className="text-xs text-muted-foreground">Bu oy: {formatCurrency(stats.thisMonthRevenue)}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.today')}: {formatCurrency(stats.todayRevenue)}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.thisMonth')}: {formatCurrency(stats.thisMonthRevenue)}</div>
           </CardContent>
         </Card>
 
         <Card className="admin-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Rezervatsiyalar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.dashboard.reservations')}</CardTitle>
             <Calendar className="w-5 h-5 md:w-6 md:h-6 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold">{stats.totalReservations}</div>
-            <div className="text-xs text-muted-foreground">Bugun: {stats.todayReservations}</div>
-            <div className="text-xs text-muted-foreground">Tasdiqlangan: {stats.confirmedReservations}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.today')}: {stats.todayReservations}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.confirmed')}: {stats.confirmedReservations}</div>
           </CardContent>
         </Card>
 
         <Card className="admin-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Foydalanuvchilar</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.dashboard.users')}</CardTitle>
             <Users className="w-5 h-5 md:w-6 md:h-6 text-indigo-500" />
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold">{stats.totalUsers}</div>
-            <div className="text-xs text-muted-foreground">Yangi: {stats.newUsers}</div>
-            <div className="text-xs text-muted-foreground">Xabarlar: {stats.unreadMessages}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.new')}: {stats.newUsers}</div>
+            <div className="text-xs text-muted-foreground">{t('admin.dashboard.messages')}: {stats.unreadMessages}</div>
           </CardContent>
         </Card>
       </div>
@@ -191,23 +193,23 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="admin-card">
           <CardHeader>
-            <CardTitle className="text-lg">Buyurtmalar holati</CardTitle>
+            <CardTitle className="text-lg">{t('admin.dashboard.orderStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Kutilmoqda</span>
+              <span className="text-sm">{t('admin.dashboard.pending')}</span>
               <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
                 {stats.pendingOrders}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Yetkazib berildi</span>
+              <span className="text-sm">{t('admin.dashboard.delivered')}</span>
               <Badge variant="outline" className="bg-green-50 text-green-700">
                 {stats.deliveredOrders}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Bekor qilindi</span>
+              <span className="text-sm">{t('admin.dashboard.cancelled')}</span>
               <Badge variant="outline" className="bg-red-50 text-red-700">
                 {stats.cancelledOrders}
               </Badge>
@@ -217,23 +219,23 @@ const AdminDashboard: React.FC = () => {
 
         <Card className="admin-card">
           <CardHeader>
-            <CardTitle className="text-lg">Rezervatsiyalar holati</CardTitle>
+            <CardTitle className="text-lg">{t('admin.dashboard.reservationStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Tasdiqlangan</span>
+              <span className="text-sm">{t('admin.dashboard.confirmed')}</span>
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
                 {stats.confirmedReservations}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Bekor qilindi</span>
+              <span className="text-sm">{t('admin.dashboard.cancelled')}</span>
               <Badge variant="outline" className="bg-red-50 text-red-700">
                 {stats.cancelledReservations}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Umumiy</span>
+              <span className="text-sm">{t('admin.dashboard.total')}</span>
               <Badge variant="outline">
                 {stats.totalReservations}
               </Badge>
@@ -250,7 +252,7 @@ const AdminDashboard: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
-                So'ngi buyurtmalar
+                {t('admin.dashboard.recentOrders')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -259,7 +261,7 @@ const AdminDashboard: React.FC = () => {
                   <div key={order._id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
                     <div className="flex-1">
                       <div className="font-medium text-sm">#{order._id.slice(-6)}</div>
-                      <div className="text-xs text-gray-500">{order.user?.name || 'Noma\'lum'}</div>
+                      <div className="text-xs text-gray-500">{order.user?.name || t('admin.dashboard.unknown')}</div>
                     </div>
                     <div className="text-right">
                       <div className="font-medium text-sm">{formatCurrency(order.totalPrice)}</div>
@@ -281,7 +283,7 @@ const AdminDashboard: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <XCircle className="w-5 h-5 text-red-500" />
-                So'ngi bekor qilishlar
+                {t('admin.dashboard.recentCancellations')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -290,7 +292,7 @@ const AdminDashboard: React.FC = () => {
                   <div key={item._id} className="flex items-center justify-between p-3 border rounded-lg bg-red-50 dark:bg-red-900/10">
                     <div className="flex-1">
                       <div className="font-medium text-sm">
-                        {item.type === 'order' ? 'Buyurtma' : 'Rezervatsiya'} #{item._id.slice(-6)}
+                        {item.type === 'order' ? t('admin.orders.order') : t('admin.reservations.reservation')} #{item._id.slice(-6)}
                       </div>
                       <div className="text-xs text-gray-500">
                         {new Date(item.updatedAt || item.createdAt).toLocaleDateString()}
@@ -298,10 +300,10 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-red-600 dark:text-red-400">
-                        {item.user?.name || 'Mijoz'} tomonidan
+                        {item.user?.name || t('admin.dashboard.customer')} {t('admin.dashboard.by')}
                       </div>
                       <Badge variant="destructive" className="text-xs">
-                        Bekor qilindi
+                        {t('admin.dashboard.cancelled')}
                       </Badge>
                     </div>
                   </div>
@@ -319,10 +321,10 @@ const AdminDashboard: React.FC = () => {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />
-                So'ngi xabarlar
+                {t('admin.dashboard.recentMessages')}
               </span>
               <Button variant="outline" size="sm" onClick={markAllAsRead}>
-                Barchasini o'qilgan deb belgilash
+                {t('admin.notifications.markAllRead')}
               </Button>
             </CardTitle>
           </CardHeader>
@@ -344,7 +346,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   {!notification.read && (
                     <Badge variant="secondary" className="text-xs">
-                      Yangi
+                      {t('admin.dashboard.new')}
                     </Badge>
                   )}
                 </div>

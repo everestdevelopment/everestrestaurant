@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
-import { io } from 'socket.io-client';
+import { createSocketManager, disconnectSocketManager } from '@/lib/socket';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -81,49 +81,62 @@ const Contact = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    // Foydalanuvchi login bo'lsa, telefon raqami inputini avtomatik to'ldirish
+    if (user) {
+      form.setValue('name', user.name || '');
+      form.setValue('email', user.email || '');
+      form.setValue('phone', user.phone || '');
+    }
+  }, [user]);
+
   // WebSocket connection for real-time notifications
   useEffect(() => {
     if (user) {
-      const socket = io('http://localhost:5000', {
-        transports: ['websocket', 'polling'],
-        timeout: 20000,
-        forceNew: true
+      const socketManager = createSocketManager({
+        url: import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000',
+        auth: {
+          token: user.token,
+          userId: user._id,
+          role: user.role,
+          name: user.name
+        }
       });
 
-      socket.on('connect', () => {
-        console.log('WebSocket connected for contact notifications');
-      });
+      socketManager.connect()
+        .then((socket) => {
+          console.log('✅ Contact notification socket connected');
 
-      socket.on('connect_error', (error) => {
-        console.error('WebSocket connection error:', error);
-      });
+          // Admin javob berganida
+          socketManager.on('contact_replied', (data) => {
+            console.log('Admin javob berdi:', data);
+            
+            // Toast bildirishnoma ko'rsatish
+            toast({
+              title: t('contact_admin_reply_toast_title', 'Admin javob berdi'),
+              description: t('contact_admin_reply_toast_description', 'Sizning xabaringizga javob berildi'),
+            });
 
-      // Admin javob berganida
-      socket.on('contact_replied', (data) => {
-        console.log('Admin javob berdi:', data);
-        
-        // Toast bildirishnoma ko'rsatish
-        toast({
-          title: t('contact_admin_reply_toast_title', 'Admin javob berdi'),
-          description: t('contact_admin_reply_toast_description', 'Sizning xabaringizga javob berildi'),
+            // Xabarlar ro'yxatini yangilash
+            loadUserMessages();
+            loadUnreadNotifications();
+          });
+
+          // Xabar o'qilganda
+          socketManager.on('contact_read', (data) => {
+            console.log('Xabar o\'qildi:', data);
+            
+            // Xabarlar ro'yxatini yangilash
+            loadUserMessages();
+            loadUnreadNotifications();
+          });
+        })
+        .catch((error) => {
+          console.error('❌ Failed to connect contact socket:', error);
         });
 
-        // Xabarlar ro'yxatini yangilash
-        loadUserMessages();
-        loadUnreadNotifications();
-      });
-
-      // Xabar o'qilganda
-      socket.on('contact_read', (data) => {
-        console.log('Xabar o\'qildi:', data);
-        
-        // Xabarlar ro'yxatini yangilash
-        loadUserMessages();
-        loadUnreadNotifications();
-      });
-
       return () => {
-        socket.disconnect();
+        disconnectSocketManager();
       };
     }
   }, [user, toast, t]);
@@ -250,9 +263,14 @@ const Contact = () => {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-600 dark:text-gray-300">{t('contact_form_phone')}</FormLabel>
+                      <FormLabel>{t('contact_phone_label')}</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder={t('contact_form_phone_placeholder')} className="bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white" {...field} />
+                        <Input
+                          type="tel"
+                          placeholder={t('contact_phone_placeholder')}
+                          {...field}
+                          value={field.value}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

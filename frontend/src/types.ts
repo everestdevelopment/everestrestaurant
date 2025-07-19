@@ -1,3 +1,14 @@
+export interface ProductType {
+  name: string;
+  price: number;
+  description?: string;
+}
+
+export interface Ingredient {
+  name: string;
+  description?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -17,6 +28,35 @@ export interface Product {
   rating: number; // Backend response field
   quantity: number; // New field for product quantity
   isAvailable: boolean; // New field for product availability
+  
+  // Yangi qo'shilgan maydonlar
+  fullDescription?: string;
+  types?: ProductType[];
+  ingredients?: Ingredient[];
+  preparationMethod?: string;
+  preparationTime?: number;
+  calories?: number;
+  allergens?: string[];
+  tags?: string[];
+  additionalImages?: string[];
+  priceHistory?: Array<{
+    price: number;
+    date: string;
+  }>;
+  ratingCount?: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  viewCount?: number;
+  orderCount?: number;
+  createdBy?: string;
+  lastModifiedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  
+  // Virtual maydonlar
+  averageRating?: number;
+  isPopular?: boolean;
+  isNew?: boolean;
 }
 
 export interface User {
@@ -38,11 +78,21 @@ export interface Order {
   createdAt: string;
 }
 
+export interface Reservation {
+  _id: string;
+  user: User;
+  date: string;
+  time: string;
+  guests: number;
+  status: 'Pending' | 'Confirmed' | 'Cancelled';
+  createdAt: string;
+}
+
 export interface Payment {
   _id: string;
   user: User;
   order?: Order;
-  reservation?: any; // Define reservation type if available
+  reservation?: Reservation;
   amount: number;
   paymentMethod: string;
   status: 'pending' | 'completed' | 'failed';

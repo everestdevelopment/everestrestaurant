@@ -1,7 +1,6 @@
 import express from 'express';
-import { signup, login, me, logout, getUserCount, handleLoginApproval, getAllUsers, updateUserStatus, deleteUser, getUserStats, getAdminDashboardStats, googleCallback, verifyGoogleEmail, setPassword, updateProfile, changePassword, manualSignup, verifyEmailCode, forgotPassword, verifyResetCode, resetPassword } from '../controllers/authController.js';
+import { signup, login, me, logout, getUserCount, handleLoginApproval, getAllUsers, updateUserStatus, deleteUser, getUserStats, getAdminDashboardStats, updateProfile, changePassword, forgotPassword, verifyResetCode, resetPassword } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import passport from 'passport';
 
 const router = express.Router();
 
@@ -23,19 +22,9 @@ router.delete('/admin/users/:userId', protect, admin, deleteUser);
 // Admin dashboard stats
 router.get('/admin/dashboard-stats', protect, admin, getAdminDashboardStats);
 
-// Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', googleCallback);
-router.post('/google/verify', verifyGoogleEmail);
-
-router.post('/set-password', setPassword);
-
 // Profile management
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
-
-router.post('/signup/manual', manualSignup);
-router.post('/verify-email', verifyEmailCode);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-code', verifyResetCode);

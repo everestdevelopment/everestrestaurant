@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { Eye, Trash, Loader2, Package, Clock, CheckCircle, XCircle, Truck, Filter, History } from 'lucide-react';
+import { Eye, Trash, Loader2, Package, Clock, CheckCircle, XCircle, Truck, Filter, History, RefreshCw } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import StatusManager from '@/components/ui/StatusManager';
 import { getAdminStatusText } from '@/lib/utils';
@@ -224,7 +224,7 @@ const AdminOrders: React.FC = () => {
       <div className="admin-header">
         <h1 className="admin-title">{t('admin.orders.title', 'Buyurtmalar')}</h1>
         <Button variant="outline" size="sm" onClick={fetchOrders} className="admin-button">
-          <Loader2 className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Yangilash')}
+          <RefreshCw className="w-4 h-4 mr-2" /> {t('admin.orders.refresh', 'Refresh')}
         </Button>
       </div>
 
@@ -291,7 +291,9 @@ const AdminOrders: React.FC = () => {
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-8 text-gray-500">{t('admin.orders.noOrders', 'Buyurtmalar topilmadi')}</div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
+        <div className="space-y-4">
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white dark:bg-slate-800 rounded-lg border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-slate-700">
@@ -384,6 +386,109 @@ const AdminOrders: React.FC = () => {
                 ))}
               </tbody>
             </table>
+            </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredOrders.map((order) => (
+              <div key={order._id} className="bg-white dark:bg-slate-800 rounded-lg border p-4 space-y-3">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white">
+                      #{order._id.slice(-6)}
+                    </h3>
+                    <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {getStatusBadge(order.status)}
+                    <div className={`w-2 h-2 rounded-full ${
+                      order.isPaid ? 'bg-green-500' : 'bg-red-500'
+                    }`} />
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                    {order.shippingAddress.fullName}
+                  </h4>
+                  <p className="text-sm text-gray-500">{order.shippingAddress.email}</p>
+                  <p className="text-sm text-gray-500">
+                    {order.shippingAddress.district}, {order.shippingAddress.region}
+                  </p>
+                </div>
+
+                {/* Order Summary */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {order.orderItems.length} {t('admin.orders.productsCount', 'ta mahsulot')}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {order.isPaid ? t('admin.orders.paid', 'To\'langan') : t('admin.orders.unpaid', 'To\'lanmagan')}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(order.totalPrice)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-slate-700">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openOrderDetails(order)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    
+                    {order.status !== 'Cancelled' && (
+                      <StatusManager
+                        currentStatus={order.status}
+                        statusOptions={statusOptions}
+                        onStatusChange={(newStatus, note) => handleStatusUpdate(order._id, newStatus, note)}
+                        isLoading={updatingStatus === order._id}
+                      />
+                    )}
+                  </div>
+                  
+                  {order.status === 'Cancelled' && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t('admin.orders.deleteOrder', 'Buyurtmani o\'chirish')}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t('admin.orders.deleteConfirm', 'Bu buyurtmani o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.')}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t('admin.orders.cancel', 'Bekor qilish')}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteOrder(order._id)}>
+                            {t('admin.orders.delete', 'O\'chirish')}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

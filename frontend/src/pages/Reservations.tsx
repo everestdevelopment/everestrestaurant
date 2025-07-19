@@ -48,8 +48,20 @@ const Reservations = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [createdReservation, setCreatedReservation] = useState<any>(null);
+  const [createdReservation, setCreatedReservation] = useState<unknown>(null);
   const [showPayment, setShowPayment] = useState(false);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      date: undefined,
+      time: '',
+      guests: 1,
+    },
+  });
 
   // Check if user is logged in
   useEffect(() => {
@@ -72,10 +84,10 @@ const Reservations = () => {
         <div className="pt-24 md:pt-32 pb-8 md:pb-12">
           <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 text-center">
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-slate-800 dark:gradient-text mb-4">
-              {t('reservations_login_required_title')}
+              {t('reservations_login_required_toast_title')}
             </h1>
             <p className="text-lg text-slate-600 dark:text-gray-400 mb-6">
-              {t('reservations_login_required_description')}
+              {t('reservations_login_required_toast_description')}
             </p>
             <Button onClick={() => navigate('/login')} className="text-lg px-8 py-3">
               {t('nav_sign_in')}
@@ -86,18 +98,6 @@ const Reservations = () => {
       </div>
     );
   }
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      date: undefined,
-      time: '',
-      guests: 1,
-    },
-  });
 
   const { date, time, guests } = form.watch();
   const totalPrice = guests * PRICE_PER_GUEST;
@@ -140,10 +140,11 @@ const Reservations = () => {
         title: t('reservations_created_title'),
         description: t('reservations_created_description'),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('reservations_fail_toast_description');
       toast({
         title: t('reservations_fail_toast_title'),
-        description: error.message || t('reservations_fail_toast_description'),
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
