@@ -454,7 +454,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('admin.products.form.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={loading || uploading}>
+        <Button type="submit" disabled={loading || uploading} className="bg-amber-500 hover:bg-amber-600 text-white font-bold">
           {loading ? t('admin.products.form.actions.saving') : t('admin.products.form.actions.save')}
         </Button>
       </div>

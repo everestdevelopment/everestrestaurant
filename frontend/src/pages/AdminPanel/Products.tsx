@@ -534,7 +534,7 @@ const AdminProducts: React.FC = () => {
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
-              <Button onClick={openAddModal} className="admin-button bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button onClick={openAddModal} className="bg-amber-500 hover:bg-amber-600 text-white font-bold">
                 <Plus className="w-4 h-4 mr-2" />
                 {t('admin.products.addProduct')}
               </Button>
